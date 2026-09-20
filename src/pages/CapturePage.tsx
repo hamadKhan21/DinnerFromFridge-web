@@ -4,19 +4,7 @@ import { api } from '../api/client'
 import { PaywallError } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = String(reader.result ?? '')
-      const b64 = result.includes(',') ? result.split(',')[1] : result
-      resolve(b64)
-    }
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  })
-}
+import { prepareImageBase64, truncateError } from '../lib/imagePrepare'
 
 export function CapturePage() {
   const { deviceId, setIngredients, setQuota } = useApp()
@@ -29,8 +17,8 @@ export function CapturePage() {
     setBusy(true)
     setError(null)
     try {
-      const imageBase64 = await fileToBase64(file)
-      const result = await api.scan(deviceId, imageBase64)
+      const { imageBase64, mimeType } = await prepareImageBase64(file)
+      const result = await api.scan(deviceId, imageBase64, mimeType)
       setQuota(result.remaining, result.used, result.limit)
       setIngredients(result.ingredients)
       navigate('/ingredients', { replace: true })
@@ -38,10 +26,23 @@ export function CapturePage() {
       if (e instanceof PaywallError) {
         navigate('/paywall')
       } else {
-        setError(e instanceof Error ? e.message : 'Scan failed')
+        const raw = e instanceof Error ? e.message : 'Scan failed'
+        const lower = raw.toLowerCase()
+        if (
+          lower.includes('could not read') ||
+          lower.includes('decode') ||
+          lower.includes('empty') ||
+          lower.includes('heic') ||
+          lower.includes('unsupported')
+        ) {
+          setError('Could not read that photo — try JPG/PNG')
+        } else {
+          setError(truncateError(raw))
+        }
       }
     } finally {
       setBusy(false)
+      if (inputRef.current) inputRef.current.value = ''
     }
   }
 

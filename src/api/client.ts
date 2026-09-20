@@ -53,12 +53,19 @@ function filtersWire(filters?: TonightFilters): Record<string, unknown> | undefi
 }
 
 function throwIfPaywall(res: Response, map: Record<string, unknown>): void {
-  if (res.status === 402 || res.status === 403 || map.code === 'PAYWALL') {
+  // Only 402 or explicit PAYWALL — bare 403 is often Cloudflare bot challenge (1010), not paywall.
+  if (res.status === 402 || map.code === 'PAYWALL') {
     throw new PaywallError(
       String(map.message ?? 'Free AI limit reached (scans + Ask AI share 3 uses)'),
       Number(map.remaining ?? 0),
     )
   }
+}
+
+function truncateApiError(msg: string, max = 180): string {
+  const t = msg.replace(/\s+/g, ' ').trim()
+  if (t.length <= max) return t
+  return `${t.slice(0, max - 1)}…`
 }
 
 export const api = {
@@ -87,15 +94,22 @@ export const api = {
     }
   },
 
-  async scan(deviceId: string, imageBase64: string): Promise<CloudScanResult> {
+  async scan(
+    deviceId: string,
+    imageBase64: string,
+    mimeType: 'image/jpeg' | 'image/png' | 'image/webp' = 'image/jpeg',
+  ): Promise<CloudScanResult> {
+    const body: Record<string, unknown> = { deviceId, imageBase64, mimeType }
     const res = await fetch(`${apiBase()}/v1/scan`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ deviceId, imageBase64 }),
+      body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
     throwIfPaywall(res, map)
-    if (!res.ok) throw new Error(String(map.error ?? `scan HTTP ${res.status}`))
+    if (!res.ok) {
+      throw new Error(truncateApiError(String(map.error ?? map.message ?? `scan HTTP ${res.status}`)))
+    }
 
     const names: string[] = []
     const raw = map.ingredients
