@@ -3,9 +3,11 @@ import { api } from '../api/client'
 import type { DietPlan } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
+import { useI18n } from '../i18n/I18nContext'
 
 export function GoalsPage() {
   const { goal, setGoal, deviceId } = useApp()
+  const { t } = useI18n()
   const [weightKg, setWeightKg] = useState(goal?.weightKg ?? 80)
   const [goalWeightKg, setGoalWeightKg] = useState(goal?.goalWeightKg ?? 75)
   const [heightCm, setHeightCm] = useState(goal?.heightCm ?? 170)
@@ -50,12 +52,12 @@ export function GoalsPage() {
 
   return (
     <div>
-      <PageHeader title="Goals" />
+      <PageHeader title={t('goals.title')} />
       <div className="px-4 py-4">
-        <p className="text-sm text-muted">Fat-loss targets and a daily meal sketch from the Worker.</p>
+        <p className="text-sm text-muted">{t('goals.subtitle')}</p>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <label className="text-sm">
-            Weight (kg)
+            {t('goals.weight')}
             <input
               type="number"
               value={weightKg}
@@ -64,7 +66,7 @@ export function GoalsPage() {
             />
           </label>
           <label className="text-sm">
-            Goal (kg)
+            {t('goals.goalWeight')}
             <input
               type="number"
               value={goalWeightKg}
@@ -73,7 +75,7 @@ export function GoalsPage() {
             />
           </label>
           <label className="text-sm">
-            Height (cm)
+            {t('goals.height')}
             <input
               type="number"
               value={heightCm ?? ''}
@@ -82,7 +84,7 @@ export function GoalsPage() {
             />
           </label>
           <label className="text-sm">
-            Age
+            {t('goals.age')}
             <input
               type="number"
               value={age ?? ''}
@@ -92,29 +94,29 @@ export function GoalsPage() {
           </label>
         </div>
         <label className="mt-3 block text-sm">
-          Sex
+          {t('goals.sex')}
           <select
             value={sex}
             onChange={(e) => setSex(e.target.value)}
             className="mt-1 w-full rounded-xl border border-terracotta/20 bg-white px-3 py-2"
           >
-            <option value="">Prefer not to say</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="">{t('goals.preferNot')}</option>
+            <option value="male">{t('goals.male')}</option>
+            <option value="female">{t('goals.female')}</option>
           </select>
         </label>
         <label className="mt-3 block text-sm">
-          Activity
+          {t('goals.activity')}
           <select
             value={activity}
             onChange={(e) => setActivity(e.target.value)}
             className="mt-1 w-full rounded-xl border border-terracotta/20 bg-white px-3 py-2"
           >
-            <option value="sedentary">Sedentary</option>
-            <option value="light">Light</option>
-            <option value="moderate">Moderate</option>
-            <option value="active">Active</option>
-            <option value="very_active">Very active</option>
+            <option value="sedentary">{t('goals.sedentary')}</option>
+            <option value="light">{t('goals.light')}</option>
+            <option value="moderate">{t('goals.moderate')}</option>
+            <option value="active">{t('goals.active')}</option>
+            <option value="very_active">{t('goals.veryActive')}</option>
           </select>
         </label>
         <button
@@ -123,13 +125,13 @@ export function GoalsPage() {
           onClick={() => void saveAndPlan()}
           className="mt-5 w-full rounded-2xl bg-terracotta py-3 font-semibold text-white disabled:opacity-50"
         >
-          {busy ? 'Calculating…' : 'Save & get plan'}
+          {busy ? t('goals.calculating') : t('goals.save')}
         </button>
         {error ? <p className="mt-2 text-sm text-missing">{error}</p> : null}
 
         {plan ? (
           <div className="mt-6 rounded-2xl border border-terracotta/15 bg-white p-4">
-            <h3 className="font-bold">Daily targets</h3>
+            <h3 className="font-bold">{t('goals.dailyTargets')}</h3>
             <p className="mt-1 text-sm text-muted">
               {Math.round(plan.calorieTarget)} cal · {Math.round(plan.proteinG)}g protein ·{' '}
               {Math.round(plan.carbsG)}g carbs · {Math.round(plan.fatG)}g fat

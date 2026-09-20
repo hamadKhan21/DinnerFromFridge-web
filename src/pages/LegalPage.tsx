@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
+import { useI18n } from '../i18n/I18nContext'
 
-const PRIVACY = `Dinner From Fridge — Privacy summary (template)
+const PRIVACY = `Dinner From Fridge — Privacy summary
 
 Last updated: September 16, 2026
 
@@ -10,21 +11,22 @@ This is a plain-language product privacy summary for Dinner From Fridge. It is a
 What we process
 • Fridge / pantry photos you choose to scan, to suggest ingredient chips.
 • Ingredient lists, meal preferences, and optional goals you enter.
-• An anonymous device id used only to enforce free AI limits on our cloud Worker.
-• On-device data such as shopping lists, favorites, and week plans in localStorage.
+• An anonymous device identifier used only to enforce free scan limits.
+• On-device data such as shopping lists, favorites, and week plans stored in your browser.
 
 Where processing happens
-• Photos and dinner/Ask AI requests may be sent to our Cloudflare Worker, which may call Google Gemini.
-• Catalog search and meal matching use our Worker database.
+• Photo scans may be processed to suggest ingredients.
+• Smart recipe lookup and dinner suggestions may be processed when you use those features.
+• Recipe browsing and meal matching use our product catalog.
 
 What we do not do (current build)
 • We do not sell your personal data.
 • We do not require an account for core free features.
 • We do not use your fridge photos for advertising.
 
-Hosted copy: https://tonightfromthis.hamad2k9.workers.dev/privacy`
+Prefer manual entry if you don’t want to upload photos.`
 
-const TERMS = `Dinner From Fridge — Terms of Use (template)
+const TERMS = `Dinner From Fridge — Terms of Use
 
 Last updated: September 16, 2026
 
@@ -34,34 +36,19 @@ The app helps you turn fridge ingredients into dinner ideas, recipes, cook steps
 
 Acceptable use
 • Personal, non-abusive cooking and meal planning.
-• Do not disrupt the service or misuse scan quotas.
-• Recipe and nutrition information is approximate — not medical advice.
-
-Hosted copy: https://tonightfromthis.hamad2k9.workers.dev/terms`
+• Do not disrupt the service or misuse free scan quotas.
+• Recipe and nutrition information is approximate — not medical advice.`
 
 export function LegalPage() {
   const { doc } = useParams()
+  const { t } = useI18n()
   const isPrivacy = doc !== 'terms'
   return (
     <div>
-      <PageHeader title={isPrivacy ? 'Privacy policy' : 'Terms of use'} back />
+      <PageHeader title={isPrivacy ? t('legal.privacyTitle') : t('legal.termsTitle')} back />
       <pre className="whitespace-pre-wrap px-5 py-5 text-sm leading-relaxed text-ink">
         {isPrivacy ? PRIVACY : TERMS}
       </pre>
-      <p className="px-5 pb-8 text-sm">
-        <a
-          className="text-terracotta underline"
-          href={
-            isPrivacy
-              ? 'https://tonightfromthis.hamad2k9.workers.dev/privacy'
-              : 'https://tonightfromthis.hamad2k9.workers.dev/terms'
-          }
-          target="_blank"
-          rel="noreferrer"
-        >
-          Open hosted copy
-        </a>
-      </p>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { useI18n } from '../i18n/I18nContext'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex flex-col items-center gap-0.5 px-3 py-2 text-xs font-medium ${
@@ -6,6 +7,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 export function Layout() {
+  const { t } = useI18n()
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col bg-cream">
       <main className="flex-1 overflow-y-auto pb-24">
@@ -15,19 +17,19 @@ export function Layout() {
         <div className="mx-auto flex max-w-lg justify-around px-2 py-1">
           <NavLink to="/" end className={linkClass}>
             <span className="text-lg">🏠</span>
-            Home
+            {t('nav.home')}
           </NavLink>
           <NavLink to="/recipes" className={linkClass}>
             <span className="text-lg">📖</span>
-            Recipes
+            {t('nav.recipes')}
           </NavLink>
           <NavLink to="/nutrition" className={linkClass}>
             <span className="text-lg">💚</span>
-            Nutrition
+            {t('nav.nutrition')}
           </NavLink>
           <NavLink to="/goals" className={linkClass}>
             <span className="text-lg">🎯</span>
-            Goals
+            {t('nav.goals')}
           </NavLink>
         </div>
       </nav>

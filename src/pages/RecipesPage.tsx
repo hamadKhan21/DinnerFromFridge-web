@@ -4,10 +4,12 @@ import { api } from '../api/client'
 import { PaywallError, type Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
+import { useI18n } from '../i18n/I18nContext'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
 
 export function RecipesPage() {
   const { deviceId, rememberRecipe, setQuota, refreshQuota, quotaRemaining } = useApp()
+  const { t } = useI18n()
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(false)
@@ -23,7 +25,7 @@ export function RecipesPage() {
     try {
       const recipes = await api.searchRecipes(query, 24)
       setResults(recipes)
-      if (!recipes.length && query.trim()) setNote('No catalog hits. Try Ask AI.')
+      if (!recipes.length && query.trim()) setNote(t('recipes.noHits'))
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Search failed')
     } finally {
@@ -33,6 +35,7 @@ export function RecipesPage() {
 
   useEffect(() => {
     void search('')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const askAi = async () => {
@@ -42,14 +45,14 @@ export function RecipesPage() {
     try {
       const recipes = await api.lookupRecipe(q.trim(), deviceId)
       setResults(recipes)
-      setNote(recipes.length ? 'AI recipe lookup (uses shared free quota).' : 'No AI results.')
+      setNote(recipes.length ? t('recipes.aiNote') : t('recipes.noAi'))
       await refreshQuota()
     } catch (e) {
       if (e instanceof PaywallError) {
         setQuota(e.remaining, 3 - e.remaining, 3)
         navigate('/paywall')
       } else {
-        setError(e instanceof Error ? e.message : 'Ask AI failed')
+        setError(e instanceof Error ? e.message : 'Lookup failed')
       }
     } finally {
       setAiBusy(false)
@@ -58,7 +61,7 @@ export function RecipesPage() {
 
   return (
     <div>
-      <PageHeader title="Recipes" />
+      <PageHeader title={t('recipes.title')} />
       <div className="px-4 py-4">
         <form
           className="flex gap-2"
@@ -70,11 +73,11 @@ export function RecipesPage() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search recipes…"
+            placeholder={t('recipes.placeholder')}
             className="flex-1 rounded-xl border border-terracotta/20 bg-white px-3 py-2 outline-none focus:border-terracotta"
           />
           <button type="submit" className="rounded-xl bg-terracotta px-4 py-2 font-semibold text-white">
-            Search
+            {t('common.search')}
           </button>
         </form>
         <button
@@ -83,7 +86,7 @@ export function RecipesPage() {
           onClick={() => void askAi()}
           className="mt-2 w-full rounded-xl border border-terracotta px-4 py-2 text-sm font-semibold text-terracotta-dark disabled:opacity-40"
         >
-          {aiBusy ? 'Asking AI…' : `✨ Ask AI for recipe (${quotaRemaining} free left)`}
+          {aiBusy ? t('recipes.asking') : t('recipes.askAi', { n: quotaRemaining })}
         </button>
         {note ? <p className="mt-2 text-xs text-muted">{note}</p> : null}
         {error ? <p className="mt-2 text-sm text-missing">{error}</p> : null}
@@ -108,7 +111,7 @@ export function RecipesPage() {
                 <div>
                   <div className="font-bold">{r.title}</div>
                   <div className="text-xs text-muted">
-                    ~{totalMinutes(r)} min · {difficultyLabel(r.difficulty)}
+                    {t('recipes.min', { n: totalMinutes(r) })} · {difficultyLabel(r.difficulty)}
                   </div>
                 </div>
               </button>

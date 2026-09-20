@@ -4,6 +4,7 @@ import type { FoodItem, FoodNutritionResult, MicroNutrient, NutritionInfo } from
 import { MacroCards } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
+import { useI18n } from '../i18n/I18nContext'
 
 type Tab = 'calc' | 'micros'
 
@@ -202,6 +203,7 @@ function StatusBlock({
 
 export function NutritionPage() {
   const { deviceId } = useApp()
+  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('calc')
 
   // Shared search state per tab would be nicer, but keep simple independent queries
@@ -289,19 +291,19 @@ export function NutritionPage() {
   const unit = selected?.food.unit ?? 'g'
   const emptyHint =
     tab === 'calc'
-      ? 'Try “chicken breast”, “oats”, or “olive oil”.'
-      : 'Search produce or foods for vitamins & minerals.'
+      ? t('nutrition.emptyCalc')
+      : t('nutrition.emptyMicros')
 
   return (
     <div>
-      <PageHeader title="Nutrition" />
+      <PageHeader title={t('nutrition.title')} />
       <div className="px-4 py-3">
         {/* Tabs */}
         <div className="flex rounded-2xl bg-chip/70 p-1">
           {(
             [
-              { id: 'calc' as const, label: 'Food calc' },
-              { id: 'micros' as const, label: 'Micros' },
+              { id: 'calc' as const, label: t('nutrition.foodCalc') },
+              { id: 'micros' as const, label: t('nutrition.micros') },
             ] as const
           ).map((t) => (
             <button
@@ -321,8 +323,8 @@ export function NutritionPage() {
           <>
             <p className="mt-3 text-sm text-muted">
               {tab === 'calc'
-                ? 'Search a food, then scale calories & macros by grams or ml.'
-                : 'Search a food for vitamins & minerals (per amount).'}
+                ? t('nutrition.calcHint')
+                : t('nutrition.microsHint')}
             </p>
             <form
               className="mt-3 flex gap-2"
@@ -334,7 +336,7 @@ export function NutritionPage() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder={tab === 'calc' ? 'e.g. chicken breast' : 'e.g. spinach, banana'}
+                placeholder={tab === 'calc' ? t('nutrition.placeholderCalc') : t('nutrition.placeholderMicros')}
                 className="flex-1 rounded-xl border border-terracotta/20 bg-white px-3 py-2.5 outline-none focus:border-terracotta"
                 enterKeyHint="search"
               />
@@ -343,7 +345,7 @@ export function NutritionPage() {
                 disabled={busy}
                 className="rounded-xl bg-terracotta px-4 py-2.5 font-semibold text-white disabled:opacity-60"
               >
-                Search
+                {t('common.search')}
               </button>
             </form>
             {error && foods.length ? <p className="mt-2 text-sm text-missing">{error}</p> : null}
@@ -353,7 +355,7 @@ export function NutritionPage() {
                 loading={busy}
                 error={error}
                 empty={!foods.length}
-                emptyHint={searched ? (error ?? 'No matches yet.') : emptyHint}
+                emptyHint={searched ? (error ?? t('nutrition.noMatches')) : emptyHint}
               />
               {!busy && foods.length ? (
                 <div className="space-y-2">
@@ -366,7 +368,7 @@ export function NutritionPage() {
                       subtitle={
                         tab === 'calc'
                           ? `${Math.round(f.cal100)} cal / 100${f.unit} · P ${fmtAmount(f.protein100)} · C ${fmtAmount(f.carbs100)} · F ${fmtAmount(f.fat100)}`
-                          : 'Tap for vitamins & minerals'
+                          : t('nutrition.tapMicros')
                       }
                     />
                   ))}
