@@ -75,7 +75,7 @@ export function CookModePage() {
           </div>
         ) : null}
 
-        <details className="mt-8">
+        <details className="mt-8" open>
           <summary className="cursor-pointer font-semibold text-muted">Ingredients</summary>
           <ul className="mt-2 space-y-1 text-sm">
             {recipe.ingredients.map((ing, i) => (
