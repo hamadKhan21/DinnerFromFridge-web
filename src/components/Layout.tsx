@@ -9,9 +9,9 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export function Layout() {
   const { t } = useI18n()
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col bg-cream">
+    <div className="mx-auto flex h-dvh max-w-lg flex-col bg-cream">
       <main
-        className="flex-1 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))]"
+        className="min-h-0 flex-1 overflow-y-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))]"
       >
         <Outlet />
       </main>

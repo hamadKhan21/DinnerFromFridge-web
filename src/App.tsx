@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { useApp } from './context/AppContext'
 import { CapturePage } from './pages/CapturePage'
 import { CookModePage } from './pages/CookModePage'
 import { FavoritesPage } from './pages/FavoritesPage'
@@ -9,7 +8,6 @@ import { HomePage } from './pages/HomePage'
 import { IngredientsPage } from './pages/IngredientsPage'
 import { LegalPage } from './pages/LegalPage'
 import { NutritionPage } from './pages/NutritionPage'
-import { OnboardingPage } from './pages/OnboardingPage'
 import { PaywallPage } from './pages/PaywallPage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { RecipesPage } from './pages/RecipesPage'
@@ -18,23 +16,10 @@ import { ShoppingPage } from './pages/ShoppingPage'
 import { SuggestionsPage } from './pages/SuggestionsPage'
 import { WeekPlanPage } from './pages/WeekPlanPage'
 
-function RequireOnboarding({ children }: { children: React.ReactNode }) {
-  const { onboardingDone } = useApp()
-  if (!onboardingDone) return <Navigate to="/onboarding" replace />
-  return children
-}
-
 export default function App() {
   return (
     <Routes>
-      <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route
-        element={
-          <RequireOnboarding>
-            <Layout />
-          </RequireOnboarding>
-        }
-      >
+      <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="recipes" element={<RecipesPage />} />
         <Route path="nutrition" element={<NutritionPage />} />
@@ -51,6 +36,7 @@ export default function App() {
         <Route path="paywall" element={<PaywallPage />} />
         <Route path="legal/:doc" element={<LegalPage />} />
       </Route>
+      <Route path="onboarding" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

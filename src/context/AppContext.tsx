@@ -23,7 +23,6 @@ import { getOrCreateDeviceId } from '../lib/deviceId'
 import { loadJson, saveJson } from '../lib/storage'
 
 const K = {
-  onboarding: 'dff_onboarding_done',
   ingredients: 'dff_ingredients',
   filters: 'dff_tonight_filters',
   favorites: 'dff_favorites',
@@ -36,7 +35,6 @@ const K = {
 
 interface AppState {
   deviceId: string
-  onboardingDone: boolean
   ingredients: Ingredient[]
   tonightFilters: TonightFilters
   favorites: FavoriteRecipe[]
@@ -50,7 +48,6 @@ interface AppState {
   suggestions: MealMatch[]
   suggestionsNote: string | null
   suggestionsLoading: boolean
-  completeOnboarding: () => void
   setIngredients: (ings: Ingredient[]) => void
   updateIngredient: (index: number, patch: Partial<Ingredient>) => void
   addIngredient: (name: string) => void
@@ -82,7 +79,6 @@ function isStrong(m: MealMatch): boolean {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [deviceId] = useState(() => getOrCreateDeviceId())
-  const [onboardingDone, setOnboardingDone] = useState(() => loadJson(K.onboarding, false))
   const [ingredients, setIngredientsState] = useState<Ingredient[]>(() => loadJson(K.ingredients, []))
   const [tonightFilters, setFiltersState] = useState<TonightFilters>(() => loadJson(K.filters, {}))
   const [favorites, setFavorites] = useState<FavoriteRecipe[]>(() => loadJson(K.favorites, []))
@@ -137,11 +133,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refreshQuota()
   }, [refreshQuota])
-
-  const completeOnboarding = () => {
-    setOnboardingDone(true)
-    saveJson(K.onboarding, true)
-  }
 
   const setIngredients = (ings: Ingredient[]) => setIngredientsState(ings)
 
@@ -298,7 +289,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppState>(
     () => ({
       deviceId,
-      onboardingDone,
       ingredients,
       tonightFilters,
       favorites,
@@ -312,7 +302,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       suggestions,
       suggestionsNote,
       suggestionsLoading,
-      completeOnboarding,
       setIngredients,
       updateIngredient,
       addIngredient,
@@ -336,7 +325,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }),
     [
       deviceId,
-      onboardingDone,
       ingredients,
       tonightFilters,
       favorites,

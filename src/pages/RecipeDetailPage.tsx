@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Ingredient, Recipe } from '../api/types'
@@ -7,11 +8,13 @@ import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { difficultyLabel, ingredientDisplayLabel, scaleRecipe, totalMinutes } from '../lib/servingScale'
 
-function findScrollParent(el: HTMLElement | null): HTMLElement | null {
+/** Resolve the element that actually scrolls (overflow parent only if it overflows). */
+function findActualScrollParent(el: HTMLElement | null): HTMLElement {
   let node: HTMLElement | null = el
-  while (node) {
+  while (node && node !== document.documentElement) {
     const { overflowY } = getComputedStyle(node)
-    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') {
+    const canOverflow = overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay'
+    if (canOverflow && node.scrollHeight > node.clientHeight + 1) {
       return node
     }
     node = node.parentElement
@@ -19,9 +22,34 @@ function findScrollParent(el: HTMLElement | null): HTMLElement | null {
   return (document.scrollingElement as HTMLElement | null) ?? document.documentElement
 }
 
+function scrollMetrics(scrollEl: HTMLElement) {
+  const isDoc =
+    scrollEl === document.documentElement ||
+    scrollEl === document.body ||
+    scrollEl === document.scrollingElement
+  if (isDoc) {
+    const top = window.scrollY || document.documentElement.scrollTop
+    const height = document.documentElement.scrollHeight
+    const view = window.innerHeight
+    return { top, remaining: height - top - view, viewTop: 0, viewBottom: view }
+  }
+  const rect = scrollEl.getBoundingClientRect()
+  return {
+    top: scrollEl.scrollTop,
+    remaining: scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight,
+    viewTop: rect.top,
+    viewBottom: rect.bottom,
+  }
+}
+
 /** Subtle right-side cue that more recipe content (e.g. Steps) is below the fold. */
-function ScrollMoreCue({ stepsRef }: { stepsRef: RefObject<HTMLHeadingElement | null> }) {
-  const cueRef = useRef<HTMLButtonElement>(null)
+function ScrollMoreCue({
+  stepsRef,
+  anchorRef,
+}: {
+  stepsRef: RefObject<HTMLHeadingElement | null>
+  anchorRef: RefObject<HTMLElement | null>
+}) {
   const [show, setShow] = useState(false)
   const scrollElRef = useRef<HTMLElement | null>(null)
 
@@ -33,66 +61,102 @@ function ScrollMoreCue({ stepsRef }: { stepsRef: RefObject<HTMLHeadingElement | 
       return
     }
 
-    const remaining = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight
-    const canScrollDown = remaining > 48
+    const { remaining, viewTop, viewBottom } = scrollMetrics(scrollEl)
+    const canScrollDown = remaining > 80
 
-    let stepsInView = false
+    let stepsBelow = false
+    let stepsTopInView = false
     if (steps) {
-      const scrollRect = scrollEl.getBoundingClientRect()
       const stepsRect = steps.getBoundingClientRect()
-      // Visible when the Steps heading enters the lower half of the scroll viewport
-      stepsInView = stepsRect.top < scrollRect.bottom - 80 && stepsRect.bottom > scrollRect.top + 40
+      // Steps heading still below the visible scroll viewport
+      stepsBelow = stepsRect.top > viewBottom - 24
+      // Hide once the Steps heading top is in (or near) view
+      stepsTopInView = stepsRect.top < viewBottom - 48 && stepsRect.top > viewTop - 8
     }
 
-    setShow(canScrollDown && !stepsInView)
+    // Show when there is meaningful scroll left OR Steps are still below; hide near bottom / when Steps top visible
+    const nearBottom = remaining <= 80
+    setShow((canScrollDown || stepsBelow) && !stepsTopInView && !nearBottom)
   }, [stepsRef])
 
   useEffect(() => {
-    const anchor = cueRef.current ?? stepsRef.current
-    const scrollEl = findScrollParent(anchor)
-    scrollElRef.current = scrollEl
-    if (!scrollEl) return
+    const anchor = anchorRef.current ?? stepsRef.current
+    if (!anchor) return
 
-    update()
-    scrollEl.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
-
+    const listened = new Set<EventTarget>()
     let io: IntersectionObserver | null = null
-    if (stepsRef.current) {
-      io = new IntersectionObserver(
-        () => update(),
-        { root: scrollEl === document.documentElement ? null : scrollEl, rootMargin: '0px 0px -20% 0px', threshold: [0, 0.1, 0.5, 1] },
-      )
+
+    const attachIo = (scrollEl: HTMLElement) => {
+      io?.disconnect()
+      io = null
+      if (!stepsRef.current) return
+      const root =
+        scrollEl === document.documentElement || scrollEl === document.body ? null : scrollEl
+      io = new IntersectionObserver(() => update(), {
+        root,
+        rootMargin: '0px 0px -15% 0px',
+        threshold: [0, 0.05, 0.25, 0.5, 1],
+      })
       io.observe(stepsRef.current)
     }
 
-    return () => {
-      scrollEl.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-      io?.disconnect()
+    const onScrollOrResize = () => {
+      const scrollEl = findActualScrollParent(anchor)
+      scrollElRef.current = scrollEl
+      if (!listened.has(scrollEl)) {
+        scrollEl.addEventListener('scroll', onScrollOrResize, { passive: true })
+        listened.add(scrollEl)
+        attachIo(scrollEl)
+      }
+      update()
     }
-  }, [stepsRef, update])
+
+    onScrollOrResize()
+    window.addEventListener('scroll', onScrollOrResize, { passive: true })
+    window.addEventListener('resize', onScrollOrResize)
+    listened.add(window)
+
+    const raf = requestAnimationFrame(onScrollOrResize)
+    const t = window.setTimeout(onScrollOrResize, 120)
+
+    return () => {
+      for (const target of listened) {
+        target.removeEventListener('scroll', onScrollOrResize)
+      }
+      window.removeEventListener('resize', onScrollOrResize)
+      io?.disconnect()
+      cancelAnimationFrame(raf)
+      window.clearTimeout(t)
+    }
+  }, [anchorRef, stepsRef, update])
 
   const onTap = () => {
     const scrollEl = scrollElRef.current
     if (!scrollEl) return
     const amount = Math.min(280, Math.round(scrollEl.clientHeight * 0.4))
-    scrollEl.scrollBy({ top: amount, behavior: 'smooth' })
+    const isDoc =
+      scrollEl === document.documentElement ||
+      scrollEl === document.body ||
+      scrollEl === document.scrollingElement
+    if (isDoc) {
+      window.scrollBy({ top: amount, behavior: 'smooth' })
+    } else {
+      scrollEl.scrollBy({ top: amount, behavior: 'smooth' })
+    }
   }
 
-  return (
+  return createPortal(
     <button
-      ref={cueRef}
       type="button"
       aria-label="More content below"
       aria-hidden={!show}
       tabIndex={show ? 0 : -1}
       onClick={onTap}
-      className={`fixed right-3 z-30 flex h-9 w-9 items-center justify-center rounded-full text-terracotta transition-opacity duration-300 ${
-        show ? 'opacity-40 hover:opacity-60' : 'pointer-events-none opacity-0'
+      className={`pointer-events-auto fixed right-3 z-[60] flex h-10 w-10 items-center justify-center rounded-full bg-warm-white/80 text-terracotta shadow-sm ring-1 ring-terracotta/20 backdrop-blur-sm transition-opacity duration-300 ${
+        show ? 'opacity-70 hover:opacity-90 animate-[dff-cue-bounce_1.6s_ease-in-out_infinite]' : 'pointer-events-none opacity-0'
       }`}
       style={{
-        // Above Start cook mode CTA + bottom nav; right edge, not covering CTAs
+        // Above Start cook sticky CTA + bottom nav; right edge, not covering CTAs
         bottom: 'calc(4rem + 7.25rem + env(safe-area-inset-bottom, 0px))',
       }}
     >
@@ -105,7 +169,8 @@ function ScrollMoreCue({ stepsRef }: { stepsRef: RefObject<HTMLHeadingElement | 
           strokeLinejoin="round"
         />
       </svg>
-    </button>
+    </button>,
+    document.body,
   )
 }
 
@@ -126,6 +191,7 @@ export function RecipeDetailPage() {
   const [loading, setLoading] = useState(!recipe)
   const [error, setError] = useState<string | null>(null)
   const stepsHeadingRef = useRef<HTMLHeadingElement>(null)
+  const pageRootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (recipe) {
@@ -183,7 +249,7 @@ export function RecipeDetailPage() {
   }
 
   return (
-    <div className="pb-28">
+    <div ref={pageRootRef} className="pb-28">
       <PageHeader title={scaled.title} back />
       <div className="px-5 py-5">
         <div className="flex items-start gap-3">
@@ -274,7 +340,7 @@ export function RecipeDetailPage() {
         </ol>
       </div>
 
-      <ScrollMoreCue stepsRef={stepsHeadingRef} />
+      <ScrollMoreCue stepsRef={stepsHeadingRef} anchorRef={pageRootRef} />
 
       <div
         className="fixed left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 px-4 py-3 backdrop-blur"
