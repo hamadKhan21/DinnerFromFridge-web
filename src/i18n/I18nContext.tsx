@@ -34,7 +34,7 @@ function readStoredLocale(): Locale {
 }
 
 function applyDocumentLocale(locale: Locale) {
-  const dir = locale === 'ar' ? 'rtl' : 'ltr'
+  const dir = locale === 'ar' || locale === 'ur' ? 'rtl' : 'ltr'
   document.documentElement.lang = locale
   document.documentElement.dir = dir
 }
@@ -63,7 +63,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const value = useMemo<I18nState>(
     () => ({
       locale,
-      dir: locale === 'ar' ? 'rtl' : 'ltr',
+      dir: locale === 'ar' || locale === 'ur' ? 'rtl' : 'ltr',
       setLocale,
       t,
       locales: LOCALES,

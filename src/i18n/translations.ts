@@ -1,4 +1,4 @@
-export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'tr'
+export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'tr' | 'ur'
 
 export const LOCALES: { code: Locale; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -6,12 +6,13 @@ export const LOCALES: { code: Locale; label: string }[] = [
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
   { code: 'tr', label: 'Türkçe' },
+  { code: 'ur', label: 'اردو' },
 ]
 
 export const DEFAULT_LOCALE: Locale = 'en'
 
 export function isLocale(v: unknown): v is Locale {
-  return v === 'en' || v === 'ar' || v === 'es' || v === 'fr' || v === 'tr'
+  return v === 'en' || v === 'ar' || v === 'es' || v === 'fr' || v === 'tr' || v === 'ur'
 }
 
 export type Dict = Record<string, string>
@@ -530,7 +531,107 @@ const tr: Dict = {
   'legal.termsTitle': 'Kullanım koşulları',
 }
 
-export const TRANSLATIONS: Record<Locale, Dict> = { en, ar, es, fr, tr }
+
+const ur: Dict = {
+  ...en,
+  'nav.home': 'ہوم',
+  'nav.recipes': 'ریسیپیز',
+  'nav.nutrition': 'غذائیت',
+  'nav.goals': 'اہداف',
+  'common.back': 'واپس',
+  'home.whatsForDinner': 'آج رات\nکیا بنائیں؟',
+  'home.subtitle': 'فریج کی تصویر لیں یا جو چیزیں موجود ہیں لکھیں — آج رات پکانے کے لیے ۳ ڈنر ملیں گے۔',
+  'home.scanFridge': 'فریج اسکین کریں',
+  'home.scanHint': 'تصویر ← اجزاء کے چپس',
+  'home.enterManually': 'خود لکھیں',
+  'home.enterHint': 'جو موجود ہے لکھیں',
+  'home.oneFreeLeft': '۱ مفت اسکین باقی',
+  'home.freeLeft': '{n} مفت اسکین باقی',
+  'home.browseRecipes': 'دنیا کی ریسیپیز دیکھیں',
+  'home.favorites': 'پسندیدہ',
+  'home.weekPlan': 'ہفتہ وار منصوبہ',
+  'home.settings': 'ترتیبات',
+  'home.shopping': 'خریداری کی فہرست',
+  'capture.title': 'کیپچر',
+  'capture.heading': 'فریج کی تصویر لیں',
+  'capture.subtitle':
+    'فریج یا پینٹری کی واضح تصویر اپ لوڈ کریں۔ ہم اجزاء کے چپس تجویز کریں گے — ڈنر سے پہلے تصدیق کریں۔',
+  'capture.scanning': 'اجزاء اسکین ہو رہے ہیں…',
+  'capture.choosePhoto': '📷 تصویر منتخب کریں',
+  'capture.skip': 'چھوڑیں — خود لکھیں',
+  'capture.quotaNote':
+    'تصویری اسکین آپ کے مفت کوٹے کو سمارٹ ریسیپی تلاش کے ساتھ شیئر کرتے ہیں (۳ استعمال)۔ ریسیپیز دیکھنا ہمیشہ مفت ہے۔',
+  'capture.photoError': 'یہ تصویر نہیں پڑھی جا سکی — JPG/PNG آزمائیں',
+  'recipes.title': 'ریسیپیز',
+  'recipes.placeholder': 'ریسیپیز تلاش کریں…',
+  'recipes.askAi': '✨ سمارٹ تلاش ({n} مفت باقی)',
+  'recipes.asking': 'تلاش جاری ہے…',
+  'recipes.noHits': 'کوئی نتیجہ نہیں۔ سمارٹ تلاش آزمائیں۔',
+  'recipes.aiNote': 'سمارٹ تلاش (مشترکہ مفت کوٹہ استعمال کرتی ہے)۔',
+  'recipes.noAi': 'کوئی نتیجہ نہیں۔',
+  'nutrition.title': 'غذائیت',
+  'nutrition.foodCalc': 'فوڈ کیلک',
+  'nutrition.micros': 'مائیکرو',
+  'nutrition.calcHint': 'کھانا تلاش کریں، پھر کیلوریز اور میکروز کو گرام یا ملی لیٹر سے اسکیل کریں۔',
+  'nutrition.microsHint': 'وٹامنز اور معدنیات کے لیے کھانا تلاش کریں۔',
+  'nutrition.placeholderCalc': 'مثلاً چکن بریسٹ',
+  'nutrition.placeholderMicros': 'مثلاً پالک، کیلا',
+  'nutrition.emptyCalc': '«چکن بریسٹ»، «اوٹس» یا «زیتون کا تیل» آزمائیں۔',
+  'nutrition.emptyMicros': 'وٹامنز اور معدنیات کے لیے سبزیاں یا کھانے تلاش کریں۔',
+  'nutrition.noMatches': 'ابھی کوئی میچ نہیں۔',
+  'nutrition.tapMicros': 'وٹامنز اور معدنیات کے لیے ٹچ کریں',
+  'goals.title': 'اہداف',
+  'goals.subtitle': 'چربی کم کرنے کے اہداف مقرر کریں اور روزانہ کھانے کا خاکہ حاصل کریں۔',
+  'goals.weight': 'وزن (کلوگرام)',
+  'goals.goalWeight': 'ہدف (کلوگرام)',
+  'goals.height': 'قد (سینٹی میٹر)',
+  'goals.age': 'عمر',
+  'goals.sex': 'جنس',
+  'goals.preferNot': 'بتانا نہیں چاہتے',
+  'goals.male': 'مرد',
+  'goals.female': 'عورت',
+  'goals.activity': 'سرگرمی',
+  'goals.sedentary': 'بیٹھا ہوا',
+  'goals.light': 'ہلکی',
+  'goals.moderate': 'درمیانی',
+  'goals.active': 'فعال',
+  'goals.veryActive': 'بہت فعال',
+  'goals.save': 'محفوظ کریں اور پلان حاصل کریں',
+  'goals.calculating': 'حساب ہو رہا ہے…',
+  'goals.dailyTargets': 'روزانہ اہداف',
+  'settings.title': 'ترتیبات',
+  'settings.aiQuota': 'مفت کوٹہ',
+  'settings.quotaUsed': 'استعمال شدہ {used} / {limit} · باقی {remaining}',
+  'settings.quotaHint':
+    'تصویری اسکین اور سمارٹ تلاش ایک مفت کاؤنٹر شیئر کرتے ہیں۔ ریسیپیز دیکھنا مفت رہتا ہے۔ ترجیحات اس ڈیوائس پر محفوظ ہوتی ہیں۔',
+  'settings.refreshQuota': 'کوٹہ تازہ کریں',
+  'settings.dietary': 'غذا کی ترجیحات',
+  'settings.language': 'زبان',
+  'settings.about': 'تعارف',
+  'settings.version': 'ورژن {version}',
+  'settings.privacyTerms': 'رازداری اور شرائط',
+  'settings.privacyPolicy': 'رازداری کی پالیسی',
+  'settings.termsOfUse': 'استعمال کی شرائط',
+  'settings.privacyNote':
+    'اجزاء تجویز کرنے کے لیے تصویری اسکین پر کارروائی ہو سکتی ہے۔ اگر تصاویر اپ لوڈ نہیں کرنا چاہتے تو دستی اندراج ترجیح دیں۔',
+  'paywall.title': 'اپ گریڈ',
+  'paywall.heading': 'آپ نے اپنے مفت اسکین استعمال کر لیے',
+  'paywall.body':
+    'تصویری اسکین اور سمارٹ تلاش فی ڈیوائس {n} مفت استعمال شیئر کرتے ہیں۔ ریسیپیز دیکھنا اور ڈنر میچ کرنا مفت رہتا ہے۔ باقی: {remaining}۔',
+  'paywall.webNote':
+    'سبسکرپشنز ویب پر ابھی دستیاب نہیں۔ آپ دستی اندراج، ریسیپیز دیکھنا اور ڈنر میچ کرنا جاری رکھ سکتے ہیں۔',
+  'paywall.pro': 'Pro (جلد آرہا ہے)',
+  'paywall.feature1': '• لامحدود تصویری اسکین اور سمارٹ تلاش',
+  'paywall.feature2': '• ترجیحی میچنگ',
+  'paywall.feature3': '• اضافی ریسیپی سہولتیں',
+  'paywall.unlock': 'Pro کھولیں',
+  'paywall.billingStub': 'سبسکرپشنز ویب پر ابھی دستیاب نہیں۔',
+  'paywall.keepManual': 'دستی اندراج جاری رکھیں',
+  'legal.privacyTitle': 'رازداری کی پالیسی',
+  'legal.termsTitle': 'استعمال کی شرائط',
+}
+
+export const TRANSLATIONS: Record<Locale, Dict> = { en, ar, es, fr, tr, ur }
 
 export function translate(
   locale: Locale,
