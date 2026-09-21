@@ -45,13 +45,15 @@ export function CookModePage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div
+      className="pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]"
+    >
       <PageHeader title="Cook mode" back />
       <div className="h-1 bg-chip">
         <div className="h-full bg-terracotta transition-all" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="flex-1 px-5 py-6">
+      <div className="px-5 py-6">
         <p className="text-sm font-semibold text-muted">
           Step {step + 1} of {total} · {recipe.emoji} {recipe.title}
         </p>
@@ -94,38 +96,44 @@ export function CookModePage() {
         </details>
       </div>
 
-      <div className="sticky bottom-0 flex gap-3 border-t border-terracotta/10 bg-warm-white p-4">
-        <button
-          type="button"
-          disabled={step === 0}
-          onClick={() => {
-            setStep((s) => s - 1)
-            setTimerLeft(null)
-          }}
-          className="flex-1 rounded-2xl border border-terracotta py-3 font-semibold text-terracotta-dark disabled:opacity-40"
-        >
-          Back
-        </button>
-        {step < total - 1 ? (
+      {/* Fixed above app bottom nav (+ safe area); page padding keeps content clear */}
+      <div
+        className="fixed left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 px-4 py-3 backdrop-blur"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="mx-auto flex max-w-lg gap-3">
           <button
             type="button"
+            disabled={step === 0}
             onClick={() => {
-              setStep((s) => s + 1)
+              setStep((s) => s - 1)
               setTimerLeft(null)
             }}
-            className="flex-1 rounded-2xl bg-terracotta py-3 font-semibold text-white"
+            className="flex-1 rounded-2xl border border-terracotta py-3 font-semibold text-terracotta-dark disabled:opacity-40"
           >
-            Next
+            Back
           </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex-1 rounded-2xl bg-sage py-3 font-semibold text-white"
-          >
-            Done 🎉
-          </button>
-        )}
+          {step < total - 1 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setStep((s) => s + 1)
+                setTimerLeft(null)
+              }}
+              className="flex-1 rounded-2xl bg-terracotta py-3 font-semibold text-white"
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 rounded-2xl bg-sage py-3 font-semibold text-white"
+            >
+              Done 🎉
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

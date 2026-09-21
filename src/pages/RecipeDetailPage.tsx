@@ -169,7 +169,10 @@ export function RecipeDetailPage() {
         </ol>
       </div>
 
-      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 px-4 py-3 backdrop-blur">
+      <div
+        className="fixed left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 px-4 py-3 backdrop-blur"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         <div className="mx-auto max-w-lg">
           <button
             type="button"
