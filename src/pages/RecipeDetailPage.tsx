@@ -7,6 +7,7 @@ import { NutritionStrip } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { difficultyLabel, ingredientDisplayLabel, scaleRecipe, totalMinutes } from '../lib/servingScale'
+import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
 
 /** Resolve the element that actually scrolls (overflow parent only if it overflows). */
 function findActualScrollParent(el: HTMLElement | null): HTMLElement {
@@ -192,6 +193,7 @@ export function RecipeDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const stepsHeadingRef = useRef<HTMLHeadingElement>(null)
   const pageRootRef = useRef<HTMLDivElement>(null)
+  const [shareMsg, setShareMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (recipe) {
@@ -260,14 +262,35 @@ export function RecipeDetailPage() {
               ~{totalMinutes(scaled)} min · {difficultyLabel(scaled.difficulty)} · {scaled.servings} servings
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => toggleFavorite(recipe)}
-            className="text-2xl"
-            aria-label="Favorite"
-          >
-            {isFavorite(recipe.id) ? '❤️' : '🤍'}
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={() => toggleFavorite(recipe)}
+              className="text-2xl"
+              aria-label="Favorite"
+            >
+              {isFavorite(recipe.id) ? '❤️' : '🤍'}
+            </button>
+            <button
+              type="button"
+              className="rounded-full bg-chip px-3 py-1 text-xs font-semibold text-terracotta-dark"
+              onClick={() => {
+                void (async () => {
+                  const url = shareUrlForRecipes([recipe])
+                  try {
+                    const result = await shareOrCopy(url, recipe.title, recipe.description)
+                    setShareMsg(result === 'shared' ? 'Shared!' : 'Copied!')
+                  } catch {
+                    /* cancelled */
+                  }
+                  window.setTimeout(() => setShareMsg(null), 2500)
+                })()
+              }}
+            >
+              Share
+            </button>
+            {shareMsg ? <span className="text-[10px] font-semibold text-have">{shareMsg}</span> : null}
+          </div>
         </div>
 
         <div className="mt-5 flex items-center gap-3">

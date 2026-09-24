@@ -16,7 +16,7 @@ export function Layout() {
         <Outlet />
       </main>
       <nav
-        className="fixed bottom-0 left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 backdrop-blur"
+        className="print:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 backdrop-blur"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="mx-auto flex max-w-lg justify-around px-2 py-1">

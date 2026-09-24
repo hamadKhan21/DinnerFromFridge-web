@@ -2,13 +2,23 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { PaywallError, type Recipe } from '../api/types'
+import { ActiveDietBar } from '../components/ActiveDietBar'
+import { DietChips } from '../components/DietChips'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
 
 export function RecipesPage() {
-  const { deviceId, rememberRecipe, setQuota, refreshQuota, quotaRemaining } = useApp()
+  const {
+    deviceId,
+    rememberRecipe,
+    setQuota,
+    refreshQuota,
+    quotaRemaining,
+    dietaryPreferences,
+    setDietaryPreferences,
+  } = useApp()
   const { t } = useI18n()
   const [q, setQ] = useState('')
   const [results, setResults] = useState<Recipe[]>([])
@@ -18,12 +28,12 @@ export function RecipesPage() {
   const [note, setNote] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  const search = async (query: string) => {
+  const search = async (query: string, prefs = dietaryPreferences) => {
     setLoading(true)
     setError(null)
     setNote(null)
     try {
-      const recipes = await api.searchRecipes(query, 24)
+      const recipes = await api.searchRecipes(query, 24, prefs)
       setResults(recipes)
       if (!recipes.length && query.trim()) setNote(t('recipes.noHits'))
     } catch (e) {
@@ -34,9 +44,9 @@ export function RecipesPage() {
   }
 
   useEffect(() => {
-    void search('')
+    void search(q)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [dietaryPreferences])
 
   const askAi = async () => {
     if (!q.trim()) return
@@ -62,6 +72,7 @@ export function RecipesPage() {
   return (
     <div>
       <PageHeader title={t('recipes.title')} />
+      <ActiveDietBar />
       <div className="px-4 py-4">
         <form
           className="flex gap-2"
@@ -80,6 +91,10 @@ export function RecipesPage() {
             {t('common.search')}
           </button>
         </form>
+
+        <p className="mb-2 mt-3 text-sm font-semibold text-muted">Diet</p>
+        <DietChips selected={dietaryPreferences} onChange={setDietaryPreferences} compact />
+
         <button
           type="button"
           disabled={aiBusy || !q.trim()}

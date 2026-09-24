@@ -34,3 +34,20 @@ button, input, textarea, select {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(5px); }
 }
+
+
+
+@media print {
+  nav,
+  header button,
+  .fixed {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+}

@@ -24,8 +24,14 @@ export function FilterChips({
       <button type="button" disabled={disabled} className={chip(filters.maxMinutes === 15)} onClick={() => toggleMax(15)}>
         ≤15 min
       </button>
+      <button type="button" disabled={disabled} className={chip(filters.maxMinutes === 20)} onClick={() => toggleMax(20)}>
+        ≤20 min
+      </button>
       <button type="button" disabled={disabled} className={chip(filters.maxMinutes === 30)} onClick={() => toggleMax(30)}>
         ≤30 min
+      </button>
+      <button type="button" disabled={disabled} className={chip(filters.maxMinutes === 45)} onClick={() => toggleMax(45)}>
+        ≤45 min
       </button>
       <button
         type="button"

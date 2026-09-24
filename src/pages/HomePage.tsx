@@ -1,9 +1,12 @@
 import { Link } from 'react-router-dom'
+import { DietChips } from '../components/DietChips'
+import { InstallBanner } from '../components/InstallBanner'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { COOK_TIME_LANDINGS, CUISINE_LANDINGS } from '../lib/seoLandings'
 
 export function HomePage() {
-  const { quotaRemaining, shopping, favorites } = useApp()
+  const { quotaRemaining, shopping, favorites, dietaryPreferences, setDietaryPreferences } = useApp()
   const { t } = useI18n()
   const unchecked = shopping.filter((s) => !s.checked).length
 
@@ -31,6 +34,8 @@ export function HomePage() {
         {t('home.whatsForDinner')}
       </h1>
       <p className="mt-2 text-muted">{t('home.subtitle')}</p>
+
+      <InstallBanner />
 
       <div className="mt-8 space-y-3">
         <Link
@@ -63,6 +68,11 @@ export function HomePage() {
         </p>
       ) : null}
 
+      <section className="mt-6">
+        <p className="mb-2 text-sm font-semibold text-muted">Diet preferences</p>
+        <DietChips selected={dietaryPreferences} onChange={setDietaryPreferences} compact />
+      </section>
+
       <Link
         to="/recipes"
         className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-terracotta px-4 py-3 font-semibold text-terracotta-dark"
@@ -85,6 +95,36 @@ export function HomePage() {
           📅 {t('home.weekPlan')}
         </Link>
       </div>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Browse by time</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {COOK_TIME_LANDINGS.map((c) => (
+            <Link
+              key={c.slug}
+              to={`/cook/${c.slug}`}
+              className="rounded-full bg-chip px-3 py-1.5 text-sm font-medium text-ink hover:bg-terracotta/15"
+            >
+              ≤{c.maxMinutes} min
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Browse by cuisine</h2>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {CUISINE_LANDINGS.map((c) => (
+            <Link
+              key={c.slug}
+              to={`/cuisine/${c.slug}`}
+              className="rounded-full bg-chip px-3 py-1.5 text-sm font-medium text-ink hover:bg-terracotta/15"
+            >
+              {c.label.split(' / ')[0]}
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
