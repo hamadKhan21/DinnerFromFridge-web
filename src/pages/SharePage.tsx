@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
-import { setDocumentMeta } from '../lib/documentMeta'
+import { applyPageSeo } from '../lib/documentMeta'
 import { decodeSharePayload } from '../lib/sharePayload'
 
 export function SharePage() {
@@ -10,15 +10,21 @@ export function SharePage() {
 
   useEffect(() => {
     if (!data) {
-      setDocumentMeta('Shared dinners · Dinner From Fridge', 'Shared dinner ideas from Dinner From Fridge.')
+      applyPageSeo({
+        title: 'Shared dinners | Dinner From Fridge',
+        description: 'Shared dinner ideas from Dinner From Fridge.',
+        canonical: '/s/' + raw,
+        noIndex: true,
+      })
       return
     }
     const titles = data.meals.map((m) => m.t).join(', ')
-    setDocumentMeta(
-      `${titles} · Dinner From Fridge`,
-      data.note || `Dinner ideas to cook tonight: ${titles}`,
-    )
-  }, [data])
+    applyPageSeo({
+      title: `${titles} | Dinner From Fridge`,
+      description: data.note || `Dinner ideas to cook tonight: ${titles}`,
+      canonical: `/s/${raw}`,
+    })
+  }, [data, raw])
 
   if (!data) {
     return (

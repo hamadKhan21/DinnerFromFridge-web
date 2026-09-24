@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { totalMinutes } from '../lib/servingScale'
+import { usePageSeo } from '../lib/documentMeta'
 
 export function WeekPlanPage() {
   const { ingredients, dietaryPreferences, deviceId, weekPlan, setWeekPlan, rememberRecipe, addShopping } =
@@ -11,6 +12,12 @@ export function WeekPlanPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
+  usePageSeo({
+    title: 'Weekly meal plan | Dinner From Fridge',
+    description: 'Plan dinners for the week from fridge-friendly recipes.',
+    canonical: '/week-plan',
+  })
+
 
   const generate = async (refresh = false) => {
     setBusy(true)

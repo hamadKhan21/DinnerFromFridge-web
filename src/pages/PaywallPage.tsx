@@ -2,11 +2,19 @@ import { useNavigate } from 'react-router-dom'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { usePageSeo } from '../lib/documentMeta'
 
 export function PaywallPage() {
   const navigate = useNavigate()
   const { quotaRemaining } = useApp()
   const { t } = useI18n()
+
+  usePageSeo({
+    title: 'Pro | Dinner From Fridge',
+    description: 'Unlock more AI fridge scans and recipe lookups with Dinner From Fridge Pro.',
+    canonical: '/paywall',
+    noIndex: true,
+  })
 
   return (
     <div>

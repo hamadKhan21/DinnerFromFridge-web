@@ -3,6 +3,7 @@ import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
 import type { Locale } from '../i18n/translations'
+import { usePageSeo } from '../lib/documentMeta'
 
 const PREF_OPTIONS = [
   'vegetarian',
@@ -24,6 +25,12 @@ export function SettingsPage() {
     setDietaryPreferences,
   } = useApp()
   const { t, locale, setLocale, locales } = useI18n()
+  usePageSeo({
+    title: 'Settings | Dinner From Fridge',
+    description: 'AI quota, dietary preferences, language, and legal links for Dinner From Fridge.',
+    canonical: '/settings',
+  })
+
 
   const togglePref = (p: string) => {
     setDietaryPreferences(
@@ -110,6 +117,9 @@ export function SettingsPage() {
             <strong>{t('common.appName')}</strong>
           </p>
           <p className="mt-1 text-xs text-muted">{t('settings.version', { version: '1.0.0' })}</p>
+          <Link to="/about" className="mt-2 inline-block text-sm font-semibold text-terracotta">
+            About Dinner From Fridge →
+          </Link>
         </section>
 
         <section>

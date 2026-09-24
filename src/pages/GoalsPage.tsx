@@ -4,6 +4,7 @@ import type { DietPlan } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { usePageSeo } from '../lib/documentMeta'
 
 export function GoalsPage() {
   const { goal, setGoal, deviceId } = useApp()
@@ -17,6 +18,12 @@ export function GoalsPage() {
   const [plan, setPlan] = useState<DietPlan | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  usePageSeo({
+    title: 'Nutrition goals | Dinner From Fridge',
+    description: 'Set calorie and protein goals and get a simple nutrition plan for your dinners.',
+    canonical: '/goals',
+  })
+
 
   const saveAndPlan = async () => {
     setBusy(true)

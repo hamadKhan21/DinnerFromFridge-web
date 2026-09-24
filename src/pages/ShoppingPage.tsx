@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
+import { usePageSeo } from '../lib/documentMeta'
 
 function formatItem(name: string, quantity?: string | null, unit?: string | null): string {
   const qty = quantity?.trim()
@@ -20,6 +21,12 @@ export function ShoppingPage() {
   const { shopping, addShopping, toggleShopping, removeShopping, clearShoppingChecked } = useApp()
   const [draft, setDraft] = useState('')
   const [copied, setCopied] = useState(false)
+  usePageSeo({
+    title: 'Shopping list | Dinner From Fridge',
+    description: 'Missing ingredients for tonight\'s dinners — your Dinner From Fridge shopping list.',
+    canonical: '/shopping',
+  })
+
 
   const unchecked = useMemo(() => shopping.filter((s) => !s.checked), [shopping])
   const lines = useMemo(

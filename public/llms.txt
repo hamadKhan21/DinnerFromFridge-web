@@ -1,0 +1,42 @@
+# Dinner From Fridge
+
+> Cook dinner tonight from what is already in your fridge. Scan ingredients, browse a world recipe catalog, match leftovers to meals, track nutrition, and plan the week — with no pork products in the catalog.
+
+## Site
+- Homepage: https://dinnerfromfridge.com/
+- About: https://dinnerfromfridge.com/about
+- Recipe search: https://dinnerfromfridge.com/recipes?q={query}
+- Fridge scan: https://dinnerfromfridge.com/capture
+- Nutrition calculator: https://dinnerfromfridge.com/nutrition
+- Goals / nutrition plan: https://dinnerfromfridge.com/goals
+- Shopping list: https://dinnerfromfridge.com/shopping
+
+## Cook-time landings
+- https://dinnerfromfridge.com/cook/15-min — dinners in about 15 minutes
+- https://dinnerfromfridge.com/cook/20-min
+- https://dinnerfromfridge.com/cook/30-min
+- https://dinnerfromfridge.com/cook/45-min
+
+## Cuisine landings
+- https://dinnerfromfridge.com/cuisine/desi — Desi / South Asian
+- https://dinnerfromfridge.com/cuisine/arabic — Arabic / Middle Eastern
+- https://dinnerfromfridge.com/cuisine/chinese
+- https://dinnerfromfridge.com/cuisine/western
+- https://dinnerfromfridge.com/cuisine/mexican
+
+## Recipes
+Individual recipes are at https://dinnerfromfridge.com/recipe/{id}
+Example: https://dinnerfromfridge.com/recipe/seed-chicken-caesar-wrap-dinner
+
+Full catalog index: https://dinnerfromfridge.com/sitemap.xml
+
+## Product facts
+- Turns fridge / pantry ingredients into dinner ideas (scan or type).
+- Catalog of world recipes with cook steps, scaled ingredients, and optional nutrition.
+- Week plan, favorites, and shopping list tools.
+- Dietary preference chips (e.g. vegetarian, vegan, gluten-free, dairy-free, halal, keto, high-protein).
+- Policy: the recipe catalog does not include pork products.
+
+## Contact / canonical
+- Canonical site: https://dinnerfromfridge.com
+- API (recipes): https://tonightfromthis.hamad2k9.workers.dev

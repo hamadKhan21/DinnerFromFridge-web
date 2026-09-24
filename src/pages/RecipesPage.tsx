@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
 import { PaywallError, type Recipe } from '../api/types'
 import { ActiveDietBar } from '../components/ActiveDietBar'
@@ -7,6 +7,7 @@ import { DietChips } from '../components/DietChips'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { usePageSeo } from '../lib/documentMeta'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
 
 export function RecipesPage() {
@@ -20,13 +21,26 @@ export function RecipesPage() {
     setDietaryPreferences,
   } = useApp()
   const { t } = useI18n()
-  const [q, setQ] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialQ = searchParams.get('q') || ''
+  const [q, setQ] = useState(initialQ)
   const [results, setResults] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(false)
   const [aiBusy, setAiBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const navigate = useNavigate()
+
+  usePageSeo({
+    title: q.trim()
+      ? `${q.trim()} recipes | Dinner From Fridge`
+      : 'Recipes from your fridge | Dinner From Fridge',
+    description: q.trim()
+      ? `Recipes matching “${q.trim()}” — cook from leftovers and ingredients you already have.`
+      : 'Search leftover-friendly dinners and world recipes. Filter by diet preferences and cook tonight from what you have.',
+    canonical: q.trim() ? `/recipes?q=${encodeURIComponent(q.trim())}` : '/recipes',
+    keywords: 'recipe search, leftover recipes, fridge dinner ideas',
+  })
 
   const search = async (query: string, prefs = dietaryPreferences) => {
     setLoading(true)
@@ -44,9 +58,11 @@ export function RecipesPage() {
   }
 
   useEffect(() => {
-    void search(q)
+    const fromUrl = searchParams.get('q') || ''
+    setQ(fromUrl)
+    void search(fromUrl)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dietaryPreferences])
+  }, [dietaryPreferences, searchParams])
 
   const askAi = async () => {
     if (!q.trim()) return
@@ -69,6 +85,13 @@ export function RecipesPage() {
     }
   }
 
+  const submitSearch = () => {
+    const next = q.trim()
+    if (next) setSearchParams({ q: next })
+    else setSearchParams({})
+    void search(next)
+  }
+
   return (
     <div>
       <PageHeader title={t('recipes.title')} />
@@ -78,7 +101,7 @@ export function RecipesPage() {
           className="flex gap-2"
           onSubmit={(e) => {
             e.preventDefault()
-            void search(q)
+            submitSearch()
           }}
         >
           <input
@@ -113,14 +136,12 @@ export function RecipesPage() {
         ) : (
           <div className="mt-4 space-y-2">
             {results.map((r) => (
-              <button
+              <Link
                 key={r.id}
-                type="button"
+                to={`/recipe/${encodeURIComponent(r.id)}`}
+                state={{ recipe: r }}
+                onClick={() => rememberRecipe(r)}
                 className="flex w-full items-start gap-3 rounded-2xl border border-terracotta/10 bg-white p-3 text-left"
-                onClick={() => {
-                  rememberRecipe(r)
-                  navigate(`/recipe/${encodeURIComponent(r.id)}`, { state: { recipe: r } })
-                }}
               >
                 <span className="text-2xl">{r.emoji}</span>
                 <div>
@@ -129,7 +150,7 @@ export function RecipesPage() {
                     {t('recipes.min', { n: totalMinutes(r) })} · {difficultyLabel(r.difficulty)}
                   </div>
                 </div>
-              </button>
+              </Link>
             ))}
           </div>
         )}

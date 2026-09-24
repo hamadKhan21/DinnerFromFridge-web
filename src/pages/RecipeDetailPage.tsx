@@ -7,6 +7,12 @@ import { NutritionStrip } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { difficultyLabel, ingredientDisplayLabel, scaleRecipe, totalMinutes } from '../lib/servingScale'
+import {
+  applyPageSeo,
+  buildRecipeJsonLd,
+  clearJsonLd,
+  setJsonLd,
+} from '../lib/documentMeta'
 import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
 
 /** Resolve the element that actually scrolls (overflow parent only if it overflows). */
@@ -223,6 +229,36 @@ export function RecipeDetailPage() {
       cancelled = true
     }
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!recipe) return
+    const mins = totalMinutes(recipe)
+    applyPageSeo({
+      title: `${recipe.title} recipe (${mins} min) | Dinner From Fridge`,
+      description:
+        recipe.description?.trim() ||
+        `Cook ${recipe.title} in about ${mins} minutes from ingredients you may already have.`,
+      canonical: `/recipe/${encodeURIComponent(recipe.id)}`,
+      keywords: (recipe.tags || []).join(', '),
+      type: 'article',
+    })
+    setJsonLd(
+      'recipe',
+      buildRecipeJsonLd({
+        id: recipe.id,
+        title: recipe.title,
+        description: recipe.description,
+        emoji: recipe.emoji,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        totalMinutes: mins,
+        servings: recipe.servings,
+        tags: recipe.tags,
+        nutrition: recipe.nutrition,
+      }),
+    )
+    return () => clearJsonLd('recipe')
+  }, [recipe])
 
   const scaled = useMemo(() => (recipe ? scaleRecipe({ ...recipe, servings: baseServings }, servings) : null), [
     recipe,

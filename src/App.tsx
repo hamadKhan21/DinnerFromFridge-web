@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { AboutPage } from './pages/AboutPage'
 import { CapturePage } from './pages/CapturePage'
 import { CookOrModePage } from './pages/CookOrModePage'
 import { CuisineLandingPage } from './pages/CuisineLandingPage'
@@ -23,6 +24,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="about" element={<AboutPage />} />
         <Route path="recipes" element={<RecipesPage />} />
         <Route path="nutrition" element={<NutritionPage />} />
         <Route path="goals" element={<GoalsPage />} />

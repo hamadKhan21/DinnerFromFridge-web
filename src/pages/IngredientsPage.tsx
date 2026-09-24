@@ -4,6 +4,7 @@ import { FilterChips } from '../components/FilterChips'
 import { IngredientChip } from '../components/IngredientChip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
+import { usePageSeo } from '../lib/documentMeta'
 
 export function IngredientsPage() {
   const {
@@ -16,6 +17,12 @@ export function IngredientsPage() {
   } = useApp()
   const [draft, setDraft] = useState('')
   const navigate = useNavigate()
+  usePageSeo({
+    title: 'Your ingredients | Dinner From Fridge',
+    description: 'Edit fridge ingredients, mark use-soon items, and get dinner matches from what you have.',
+    canonical: '/ingredients',
+  })
+
 
   return (
     <div>

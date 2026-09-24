@@ -5,6 +5,7 @@ import { MacroCards } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { usePageSeo } from '../lib/documentMeta'
 
 type Tab = 'calc' | 'micros'
 
@@ -205,6 +206,12 @@ export function NutritionPage() {
   const { deviceId } = useApp()
   const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('calc')
+  usePageSeo({
+    title: 'Nutrition calculator | Dinner From Fridge',
+    description: 'Look up foods and see calories, macros, and micronutrients for meals you cook.',
+    canonical: '/nutrition',
+  })
+
 
   // Shared search state per tab would be nicer, but keep simple independent queries
   const [q, setQ] = useState('')

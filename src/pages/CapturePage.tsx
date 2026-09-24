@@ -6,6 +6,7 @@ import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
 import { prepareImageBase64, truncateError } from '../lib/imagePrepare'
+import { usePageSeo } from '../lib/documentMeta'
 
 export function CapturePage() {
   const { deviceId, setIngredients, setQuota } = useApp()
@@ -14,6 +15,12 @@ export function CapturePage() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  usePageSeo({
+    title: 'Scan your fridge | Dinner From Fridge',
+    description: 'Snap a fridge or pantry photo to get ingredient suggestions and dinner ideas from what you already have.',
+    canonical: '/capture',
+  })
 
   const runScan = async (file: File) => {
     setBusy(true)

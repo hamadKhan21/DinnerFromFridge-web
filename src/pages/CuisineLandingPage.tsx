@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
-import { setDocumentMeta } from '../lib/documentMeta'
+import { buildItemListJsonLd, usePageSeo } from '../lib/documentMeta'
 import { CUISINE_LANDINGS, cuisineLandingBySlug } from '../lib/seoLandings'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
 
@@ -17,15 +17,33 @@ export function CuisineLandingPage() {
   const { slug = '' } = useParams()
   const landing = cuisineLandingBySlug(slug)
   const { rememberRecipe, dietaryPreferences } = useApp()
-  const navigate = useNavigate()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!landing) return
-    setDocumentMeta(`${landing.label} recipes · Dinner From Fridge`, landing.intro)
-  }, [landing])
+  usePageSeo(
+    landing
+      ? {
+          title: `${landing.label} recipes you can cook from your fridge | Dinner From Fridge`,
+          description: landing.intro,
+          canonical: `/cuisine/${landing.slug}`,
+          keywords: `${landing.label}, fridge recipes, leftover dinner`,
+        }
+      : null,
+    landing && recipes.length
+      ? [
+          {
+            id: 'collection',
+            data: buildItemListJsonLd(
+              `${landing.label} recipes`,
+              landing.intro,
+              `/cuisine/${landing.slug}`,
+              recipes.map((r) => ({ id: r.id, title: r.title })),
+            ),
+          },
+        ]
+      : undefined,
+  )
 
   useEffect(() => {
     if (!landing) return
@@ -90,14 +108,12 @@ export function CuisineLandingPage() {
         ) : (
           <div className="mt-4 space-y-2">
             {recipes.map((r) => (
-              <button
+              <Link
                 key={r.id}
-                type="button"
+                to={`/recipe/${encodeURIComponent(r.id)}`}
+                state={{ recipe: r }}
+                onClick={() => rememberRecipe(r)}
                 className="flex w-full items-start gap-3 rounded-2xl border border-terracotta/10 bg-white p-3 text-left"
-                onClick={() => {
-                  rememberRecipe(r)
-                  navigate(`/recipe/${encodeURIComponent(r.id)}`, { state: { recipe: r } })
-                }}
               >
                 <span className="text-2xl">{r.emoji}</span>
                 <div>
@@ -106,7 +122,7 @@ export function CuisineLandingPage() {
                     ~{totalMinutes(r)} min · {difficultyLabel(r.difficulty)}
                   </div>
                 </div>
-              </button>
+              </Link>
             ))}
             {!recipes.length ? (
               <p className="mt-8 text-center text-muted">No matching recipes yet — try browsing all recipes.</p>

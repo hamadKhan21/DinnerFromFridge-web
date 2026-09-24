@@ -8,6 +8,7 @@ import { MealCard } from '../components/MealCard'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
+import { usePageSeo } from '../lib/documentMeta'
 
 const NOTE: Record<string, string> = {
   cloudRecipes: 'Matched from the catalog (free).',
@@ -30,6 +31,12 @@ export function SuggestionsPage() {
   } = useApp()
   const navigate = useNavigate()
   const [shareMsg, setShareMsg] = useState<string | null>(null)
+  usePageSeo({
+    title: 'Tonight\'s dinner suggestions | Dinner From Fridge',
+    description: 'Dinner ideas matched to your fridge ingredients — leftovers welcome.',
+    canonical: '/suggestions',
+  })
+
 
   useEffect(() => {
     void computeSuggestions()

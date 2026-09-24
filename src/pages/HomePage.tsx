@@ -3,12 +3,31 @@ import { DietChips } from '../components/DietChips'
 import { InstallBanner } from '../components/InstallBanner'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import {
+  buildOrganizationJsonLd,
+  buildWebsiteJsonLd,
+  usePageSeo,
+} from '../lib/documentMeta'
 import { COOK_TIME_LANDINGS, CUISINE_LANDINGS } from '../lib/seoLandings'
 
 export function HomePage() {
   const { quotaRemaining, shopping, favorites, dietaryPreferences, setDietaryPreferences } = useApp()
   const { t } = useI18n()
   const unchecked = shopping.filter((s) => !s.checked).length
+
+  usePageSeo(
+    {
+      title: 'Dinner From Fridge — cook tonight from what you already have',
+      description:
+        'Scan your fridge or type ingredients. Match leftovers to world recipes, cook in 15–45 minutes, track nutrition, and plan the week. No pork.',
+      canonical: '/',
+      keywords: 'fridge recipes, leftover dinner, what to cook tonight, 30 minute meals',
+    },
+    [
+      { id: 'website', data: buildWebsiteJsonLd() },
+      { id: 'organization', data: buildOrganizationJsonLd() },
+    ],
+  )
 
   return (
     <div className="px-6 pb-8 pt-6">

@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import { usePageSeo } from '../lib/documentMeta'
 import { PageHeader } from '../components/PageHeader'
 import { useI18n } from '../i18n/I18nContext'
 
@@ -43,6 +44,15 @@ export function LegalPage() {
   const { doc } = useParams()
   const { t } = useI18n()
   const isPrivacy = doc !== 'terms'
+  usePageSeo({
+    title: isPrivacy
+      ? 'Privacy Policy | Dinner From Fridge'
+      : 'Terms of Use | Dinner From Fridge',
+    description: isPrivacy
+      ? 'Privacy summary for Dinner From Fridge — how fridge scans and device ids are used.'
+      : 'Terms of Use for Dinner From Fridge.',
+    canonical: isPrivacy ? '/legal/privacy' : '/legal/terms',
+  })
   return (
     <div>
       <PageHeader title={isPrivacy ? t('legal.privacyTitle') : t('legal.termsTitle')} back />

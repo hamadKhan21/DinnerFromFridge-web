@@ -5,6 +5,7 @@ import type { Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { ingredientDisplayLabel } from '../lib/servingScale'
+import { applyPageSeo } from '../lib/documentMeta'
 
 export function CookModePage() {
   const { id = '' } = useParams()
@@ -34,6 +35,16 @@ export function CookModePage() {
   }, [timerLeft])
 
   const progress = useMemo(() => (total ? ((step + 1) / total) * 100 : 0), [step, total])
+
+  useEffect(() => {
+    if (!recipe) return
+    applyPageSeo({
+      title: `Cook: ${recipe.title} | Dinner From Fridge`,
+      description: `Step-by-step cook mode for ${recipe.title}.`,
+      canonical: `/cook/${encodeURIComponent(recipe.id)}`,
+      noIndex: true,
+    })
+  }, [recipe])
 
   if (!recipe) {
     return (
