@@ -186,7 +186,7 @@ export function RecipeDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const state = location.state as { recipe?: Recipe; have?: Ingredient[]; missing?: Ingredient[] } | null
-  const { isFavorite, toggleFavorite, addMissingToShopping, getCachedRecipe, rememberRecipe } = useApp()
+  const { isFavorite, toggleFavorite, addMissingToShopping, getCachedRecipe, rememberRecipe, addCalorieEntry } = useApp()
 
   const [recipe, setRecipe] = useState<Recipe | null>(
     state?.recipe ?? getCachedRecipe(decodeURIComponent(id)) ?? null,
@@ -200,6 +200,7 @@ export function RecipeDetailPage() {
   const stepsHeadingRef = useRef<HTMLHeadingElement>(null)
   const pageRootRef = useRef<HTMLDivElement>(null)
   const [shareMsg, setShareMsg] = useState<string | null>(null)
+  const [logMsg, setLogMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (recipe) {
@@ -349,6 +350,46 @@ export function RecipeDetailPage() {
         </div>
 
         <NutritionStrip nutrition={scaled.nutrition} label="Nutrition (scaled)" />
+
+        {scaled.nutrition &&
+        (scaled.nutrition.calories > 0 ||
+          scaled.nutrition.protein > 0 ||
+          scaled.nutrition.carbs > 0 ||
+          scaled.nutrition.fat > 0) ? (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => {
+                const n = scaled.nutrition!
+                addCalorieEntry({
+                  name: scaled.title,
+                  calories: n.calories,
+                  protein: n.protein,
+                  carbs: n.carbs,
+                  fat: n.fat,
+                  amountLabel: `${servings} serving${servings === 1 ? '' : 's'}`,
+                  source: 'recipe',
+                  recipeId: recipe.id,
+                })
+                setLogMsg(`Logged · ${Math.round(n.calories)} cal`)
+                window.setTimeout(() => setLogMsg(null), 3500)
+              }}
+              className="w-full rounded-2xl border border-terracotta bg-white py-3 font-semibold text-terracotta-dark"
+            >
+              Log this meal
+            </button>
+            {logMsg ? (
+              <p className="mt-2 text-center text-sm font-semibold text-have">
+                {logMsg} ·{' '}
+                <Link to="/today" className="underline">
+                  Today
+                </Link>
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-3 text-center text-xs text-muted">Nutrition not available for this recipe</p>
+        )}
 
         <h3 className="mt-6 font-bold">Ingredients</h3>
         <ul className="mt-2 space-y-1.5">

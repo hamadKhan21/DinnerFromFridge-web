@@ -13,6 +13,9 @@ function SiteFooter() {
         <Link className="hover:text-terracotta" to="/about">
           About
         </Link>
+        <Link className="hover:text-terracotta" to="/today">
+          Today
+        </Link>
         <Link className="hover:text-terracotta" to="/recipes">
           Recipes
         </Link>
@@ -34,6 +37,13 @@ function SiteFooter() {
           Dinner From Fridge
         </Link>{' '}
         — cook tonight from what you already have
+      </p>
+      <p className="mt-2">
+        Optional:{' '}
+        <Link to="/today" className="font-semibold text-terracotta hover:underline">
+          track today’s calories
+        </Link>{' '}
+        on this device.
       </p>
     </footer>
   )

@@ -63,6 +63,12 @@ export function AboutPage() {
               </Link>
               .
             </li>
+            <li>
+              <Link className="font-semibold text-terracotta" to="/today">
+                Today
+              </Link>{' '}
+              — optional on-device calorie tracking (foods, recipes, custom entries).
+            </li>
             <li>Week plan, favorites, and shopping list.</li>
             <li>
               <strong className="text-ink">No pork</strong> — the catalog excludes pork products.

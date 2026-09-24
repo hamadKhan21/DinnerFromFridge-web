@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { DietPlan } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
@@ -7,7 +8,7 @@ import { useI18n } from '../i18n/I18nContext'
 import { usePageSeo } from '../lib/documentMeta'
 
 export function GoalsPage() {
-  const { goal, setGoal, deviceId } = useApp()
+  const { goal, setGoal, deviceId, setNutritionTargets, nutritionTargets } = useApp()
   const { t } = useI18n()
   const [weightKg, setWeightKg] = useState(goal?.weightKg ?? 80)
   const [goalWeightKg, setGoalWeightKg] = useState(goal?.goalWeightKg ?? 75)
@@ -50,6 +51,13 @@ export function GoalsPage() {
         deviceId,
       })
       setPlan(p)
+      setNutritionTargets({
+        calorieTarget: p.calorieTarget,
+        proteinG: p.proteinG,
+        carbsG: p.carbsG,
+        fatG: p.fatG,
+        updatedAtMillis: Date.now(),
+      })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load plan')
     } finally {
@@ -156,6 +164,26 @@ export function GoalsPage() {
               ))}
             </ul>
             {plan.notes ? <p className="mt-3 text-xs text-muted">{plan.notes}</p> : null}
+            <Link
+              to="/today"
+              className="mt-4 flex w-full items-center justify-center rounded-2xl border border-terracotta py-3 font-semibold text-terracotta-dark"
+            >
+              {t('goals.trackToday')}
+            </Link>
+          </div>
+        ) : nutritionTargets ? (
+          <div className="mt-6 rounded-2xl border border-terracotta/15 bg-white p-4">
+            <h3 className="font-bold">{t('goals.dailyTargets')}</h3>
+            <p className="mt-1 text-sm text-muted">
+              {Math.round(nutritionTargets.calorieTarget)} cal · {Math.round(nutritionTargets.proteinG)}g protein ·{' '}
+              {Math.round(nutritionTargets.carbsG)}g carbs · {Math.round(nutritionTargets.fatG)}g fat
+            </p>
+            <Link
+              to="/today"
+              className="mt-4 flex w-full items-center justify-center rounded-2xl border border-terracotta py-3 font-semibold text-terracotta-dark"
+            >
+              {t('goals.trackToday')}
+            </Link>
           </div>
         ) : null}
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
@@ -11,12 +11,13 @@ export function CookModePage() {
   const { id = '' } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { getCachedRecipe } = useApp()
+  const { getCachedRecipe, addCalorieEntry } = useApp()
   const initial = (location.state as { recipe?: Recipe } | null)?.recipe
   const [recipe, setRecipe] = useState<Recipe | null>(initial ?? getCachedRecipe(decodeURIComponent(id)) ?? null)
   const [step, setStep] = useState(0)
   const [checked, setChecked] = useState<Record<number, boolean>>({})
   const [timerLeft, setTimerLeft] = useState<number | null>(null)
+  const [logMsg, setLogMsg] = useState<string | null>(null)
 
   useEffect(() => {
     if (recipe) return
@@ -105,6 +106,47 @@ export function CookModePage() {
             ))}
           </ul>
         </details>
+
+        {recipe.nutrition &&
+        (recipe.nutrition.calories > 0 ||
+          recipe.nutrition.protein > 0 ||
+          recipe.nutrition.carbs > 0 ||
+          recipe.nutrition.fat > 0) ? (
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => {
+                const n = recipe.nutrition!
+                const servings = recipe.servings || 1
+                addCalorieEntry({
+                  name: recipe.title,
+                  calories: n.calories,
+                  protein: n.protein,
+                  carbs: n.carbs,
+                  fat: n.fat,
+                  amountLabel: `${servings} serving${servings === 1 ? '' : 's'}`,
+                  source: 'recipe',
+                  recipeId: recipe.id,
+                })
+                setLogMsg(`Logged · ${Math.round(n.calories)} cal`)
+                window.setTimeout(() => setLogMsg(null), 3500)
+              }}
+              className="w-full rounded-2xl border border-terracotta bg-white py-3 font-semibold text-terracotta-dark"
+            >
+              Log this meal
+            </button>
+            {logMsg ? (
+              <p className="mt-2 text-center text-sm font-semibold text-have">
+                {logMsg} ·{' '}
+                <Link to="/today" className="underline">
+                  Today
+                </Link>
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-6 text-center text-xs text-muted">Nutrition not available for this recipe</p>
+        )}
       </div>
 
       {/* Fixed above app bottom nav (+ safe area); page padding keeps content clear */}

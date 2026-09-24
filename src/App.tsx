@@ -17,6 +17,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { SharePage } from './pages/SharePage'
 import { ShoppingPage } from './pages/ShoppingPage'
 import { SuggestionsPage } from './pages/SuggestionsPage'
+import { TodayPage } from './pages/TodayPage'
 import { WeekPlanPage } from './pages/WeekPlanPage'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="about" element={<AboutPage />} />
         <Route path="recipes" element={<RecipesPage />} />
         <Route path="nutrition" element={<NutritionPage />} />
+        <Route path="today" element={<TodayPage />} />
         <Route path="goals" element={<GoalsPage />} />
         <Route path="capture" element={<CapturePage />} />
         <Route path="ingredients" element={<IngredientsPage />} />

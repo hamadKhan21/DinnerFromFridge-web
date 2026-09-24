@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import type { FoodItem, FoodNutritionResult, MicroNutrient, NutritionInfo } from '../api/types'
 import { MacroCards } from '../components/NutritionStrip'
@@ -203,7 +204,7 @@ function StatusBlock({
 }
 
 export function NutritionPage() {
-  const { deviceId } = useApp()
+  const { deviceId, addCalorieEntry } = useApp()
   const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('calc')
   usePageSeo({
@@ -222,6 +223,7 @@ export function NutritionPage() {
   const [detailBusy, setDetailBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
+  const [addedMsg, setAddedMsg] = useState<string | null>(null)
 
   // Reset selection when switching tabs to avoid confusing UX
   useEffect(() => {
@@ -415,6 +417,37 @@ export function NutritionPage() {
                       label={`For ${grams}${unit}`}
                     />
                   </div>
+                  {liveMacros ? (
+                    <div className="mt-4 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addCalorieEntry({
+                            name: selected.food.name,
+                            calories: liveMacros.calories,
+                            protein: liveMacros.protein,
+                            carbs: liveMacros.carbs,
+                            fat: liveMacros.fat,
+                            amountLabel: `${grams}${unit}`,
+                            source: 'food',
+                          })
+                          setAddedMsg(t('nutrition.addedToday', { n: Math.round(liveMacros.calories) }))
+                          window.setTimeout(() => setAddedMsg(null), 2500)
+                        }}
+                        className="w-full rounded-2xl bg-terracotta py-3 font-semibold text-white"
+                      >
+                        {t('nutrition.addToToday')}
+                      </button>
+                      {addedMsg ? (
+                        <p className="text-center text-sm font-semibold text-have">
+                          {addedMsg}{' '}
+                          <Link to="/today" className="underline">
+                            {t('nutrition.viewToday')}
+                          </Link>
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null}
                   <div className="mt-5">
                     <h3 className="mb-2 text-sm font-bold text-muted">Micronutrients</h3>
                     {detailBusy ? (

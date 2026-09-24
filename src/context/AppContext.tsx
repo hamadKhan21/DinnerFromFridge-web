@@ -10,10 +10,13 @@ import {
 import { api } from '../api/client'
 import {
   FREE_AI_LIMIT,
+  type CalorieLogEntry,
+  type DailyCalorieLog,
   type FavoriteRecipe,
   type FatLossGoal,
   type Ingredient,
   type MealMatch,
+  type NutritionTargets,
   type Recipe,
   type ShoppingItem,
   type TonightFilters,
@@ -31,6 +34,30 @@ const K = {
   goal: 'dff_fat_loss_goal',
   prefs: 'dff_dietary_prefs',
   quota: 'dff_quota_cache',
+  calorieLog: 'dff_calorie_log',
+  nutritionTargets: 'dff_nutrition_targets',
+}
+
+export function localDateString(d = new Date()): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function emptyLog(date = localDateString()): DailyCalorieLog {
+  return { date, entries: [] }
+}
+
+function loadTodayLog(): DailyCalorieLog {
+  const stored = loadJson<DailyCalorieLog | null>(K.calorieLog, null)
+  const today = localDateString()
+  if (!stored || stored.date !== today) return emptyLog(today)
+  return { date: today, entries: Array.isArray(stored.entries) ? stored.entries : [] }
+}
+
+function newEntryId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
 interface AppState {
@@ -68,6 +95,16 @@ interface AppState {
   setDietaryPreferences: (prefs: string[]) => void
   rememberRecipe: (recipe: Recipe) => void
   getCachedRecipe: (id: string) => Recipe | undefined
+  nutritionTargets: NutritionTargets | null
+  setNutritionTargets: (targets: NutritionTargets | null) => void
+  todayLog: DailyCalorieLog
+  addCalorieEntry: (
+    entry: Omit<CalorieLogEntry, 'id' | 'createdAtMillis'> & { createdAtMillis?: number },
+  ) => CalorieLogEntry
+  removeCalorieEntry: (id: string) => void
+  clearTodayLog: () => void
+  todayTotals: { calories: number; protein: number; carbs: number; fat: number }
+  caloriesRemaining: number | null
 }
 
 const AppContext = createContext<AppState | null>(null)
@@ -93,6 +130,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [suggestionsNote, setNote] = useState<string | null>(null)
   const [suggestionsLoading, setLoading] = useState(false)
   const [recipeCache, setRecipeCache] = useState<Record<string, Recipe>>({})
+  const [nutritionTargets, setTargetsState] = useState<NutritionTargets | null>(() =>
+    loadJson(K.nutritionTargets, null),
+  )
+  const [todayLog, setTodayLog] = useState<DailyCalorieLog>(() => loadTodayLog())
 
   useEffect(() => {
     saveJson(K.ingredients, ingredients)
@@ -118,6 +159,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     saveJson(K.quota, { remaining: quotaRemaining, used: quotaUsed, limit: quotaLimit })
   }, [quotaRemaining, quotaUsed, quotaLimit])
+  useEffect(() => {
+    saveJson(K.nutritionTargets, nutritionTargets)
+  }, [nutritionTargets])
+  useEffect(() => {
+    saveJson(K.calorieLog, todayLog)
+  }, [todayLog])
+
+  // Roll to a fresh day if the calendar date changed while the app stayed open
+  useEffect(() => {
+    const tick = () => {
+      const today = localDateString()
+      setTodayLog((prev) => (prev.date === today ? prev : emptyLog(today)))
+    }
+    const id = window.setInterval(tick, 60_000)
+    window.addEventListener('focus', tick)
+    return () => {
+      window.clearInterval(id)
+      window.removeEventListener('focus', tick)
+    }
+  }, [])
 
   const refreshQuota = useCallback(async () => {
     try {
@@ -286,6 +347,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const removeShopping = (id: string) => setShopping((prev) => prev.filter((s) => s.id !== id))
   const clearShoppingChecked = () => setShopping((prev) => prev.filter((s) => !s.checked))
 
+  const setNutritionTargets = (targets: NutritionTargets | null) => setTargetsState(targets)
+
+  const addCalorieEntry = useCallback(
+    (entry: Omit<CalorieLogEntry, 'id' | 'createdAtMillis'> & { createdAtMillis?: number }) => {
+      const full: CalorieLogEntry = {
+        ...entry,
+        id: newEntryId(),
+        createdAtMillis: entry.createdAtMillis ?? Date.now(),
+      }
+      setTodayLog((prev) => {
+        const today = localDateString()
+        const base = prev.date === today ? prev : emptyLog(today)
+        return { date: today, entries: [...base.entries, full] }
+      })
+      return full
+    },
+    [],
+  )
+
+  const removeCalorieEntry = useCallback((id: string) => {
+    setTodayLog((prev) => ({ ...prev, entries: prev.entries.filter((e) => e.id !== id) }))
+  }, [])
+
+  const clearTodayLog = useCallback(() => {
+    setTodayLog(emptyLog())
+  }, [])
+
+  const todayTotals = useMemo(() => {
+    return todayLog.entries.reduce(
+      (acc, e) => ({
+        calories: acc.calories + (e.calories || 0),
+        protein: acc.protein + (e.protein || 0),
+        carbs: acc.carbs + (e.carbs || 0),
+        fat: acc.fat + (e.fat || 0),
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    )
+  }, [todayLog])
+
+  const caloriesRemaining = useMemo(() => {
+    if (!nutritionTargets) return null
+    return Math.round(nutritionTargets.calorieTarget - todayTotals.calories)
+  }, [nutritionTargets, todayTotals])
+
   const value = useMemo<AppState>(
     () => ({
       deviceId,
@@ -322,6 +427,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setDietaryPreferences: setPrefsState,
       rememberRecipe,
       getCachedRecipe,
+      nutritionTargets,
+      setNutritionTargets,
+      todayLog,
+      addCalorieEntry,
+      removeCalorieEntry,
+      clearTodayLog,
+      todayTotals,
+      caloriesRemaining,
     }),
     [
       deviceId,
@@ -341,6 +454,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshQuota,
       computeSuggestions,
       recipeCache,
+      nutritionTargets,
+      todayLog,
+      addCalorieEntry,
+      removeCalorieEntry,
+      clearTodayLog,
+      todayTotals,
+      caloriesRemaining,
     ],
   )
 

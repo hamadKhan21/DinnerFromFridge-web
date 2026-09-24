@@ -11,7 +11,17 @@ import {
 import { COOK_TIME_LANDINGS, CUISINE_LANDINGS } from '../lib/seoLandings'
 
 export function HomePage() {
-  const { quotaRemaining, shopping, favorites, dietaryPreferences, setDietaryPreferences } = useApp()
+  const {
+    quotaRemaining,
+    shopping,
+    favorites,
+    dietaryPreferences,
+    setDietaryPreferences,
+    nutritionTargets,
+    todayTotals,
+    caloriesRemaining,
+    todayLog,
+  } = useApp()
   const { t } = useI18n()
   const unchecked = shopping.filter((s) => !s.checked).length
 
@@ -55,6 +65,49 @@ export function HomePage() {
       <p className="mt-2 text-muted">{t('home.subtitle')}</p>
 
       <InstallBanner />
+
+      <Link
+        to="/today"
+        className="mt-5 flex items-center gap-3 rounded-2xl border border-terracotta/20 bg-white px-4 py-3.5 shadow-sm"
+      >
+        <span className="text-2xl" aria-hidden>
+          🔥
+        </span>
+        <div className="min-w-0 flex-1">
+          {nutritionTargets ? (
+            <>
+              <div className="font-bold text-ink">
+                {t('home.todayCal', {
+                  eaten: Math.round(todayTotals.calories),
+                  target: Math.round(nutritionTargets.calorieTarget),
+                })}
+              </div>
+              <div className="text-sm text-muted">
+                {caloriesRemaining != null && caloriesRemaining >= 0
+                  ? t('home.todayRemaining', { n: caloriesRemaining })
+                  : caloriesRemaining != null
+                    ? t('home.todayOver', { n: Math.abs(caloriesRemaining) })
+                    : t('home.todayTrack')}
+              </div>
+            </>
+          ) : todayLog.entries.length ? (
+            <>
+              <div className="font-bold text-ink">
+                {t('home.todayEaten', { n: Math.round(todayTotals.calories) })}
+              </div>
+              <div className="text-sm text-muted">{t('home.todaySetGoal')}</div>
+            </>
+          ) : (
+            <>
+              <div className="font-bold text-ink">{t('home.todayTrack')}</div>
+              <div className="text-sm text-muted">{t('home.todayTrackHint')}</div>
+            </>
+          )}
+        </div>
+        <span className="text-muted" aria-hidden>
+          ›
+        </span>
+      </Link>
 
       <div className="mt-8 space-y-3">
         <Link

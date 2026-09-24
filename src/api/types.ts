@@ -187,3 +187,29 @@ export class PaywallError extends Error {
 }
 
 export const FREE_AI_LIMIT = 3
+
+export interface CalorieLogEntry {
+  id: string
+  name: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+  amountLabel?: string | null
+  source: 'food' | 'recipe' | 'manual'
+  recipeId?: string | null
+  createdAtMillis: number
+}
+
+export interface DailyCalorieLog {
+  date: string // YYYY-MM-DD local
+  entries: CalorieLogEntry[]
+}
+
+export interface NutritionTargets {
+  calorieTarget: number
+  proteinG: number
+  carbsG: number
+  fatG: number
+  updatedAtMillis?: number | null
+}
