@@ -5,6 +5,7 @@ import type { DietPlan } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { errorKey } from '../lib/friendlyError'
 import { usePageSeo } from '../lib/documentMeta'
 
 export function GoalsPage() {
@@ -59,7 +60,7 @@ export function GoalsPage() {
         updatedAtMillis: Date.now(),
       })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load plan')
+      setError(t(errorKey(e)))
     } finally {
       setBusy(false)
     }

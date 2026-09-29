@@ -1,4 +1,5 @@
 import {
+  ApiError,
   FREE_AI_LIMIT,
   PaywallError,
   type CloudQuota,
@@ -22,8 +23,8 @@ import {
   recipeFromJson,
   recipesFromSearchResponse,
 } from './mapper'
+import { kindFromResponse } from '../lib/friendlyError'
 
-// silence unused if tree-shaken oddly
 
 const DEFAULT_BASE = 'https://tonightfromthis.hamad2k9.workers.dev'
 
@@ -62,10 +63,9 @@ function throwIfPaywall(res: Response, map: Record<string, unknown>): void {
   }
 }
 
-function truncateApiError(msg: string, max = 180): string {
-  const t = msg.replace(/\s+/g, ' ').trim()
-  if (t.length <= max) return t
-  return `${t.slice(0, max - 1)}…`
+/** Build a user-safe error from a failed response. Raw server text is never kept. */
+function toApiError(res: Response, map: Record<string, unknown>): ApiError {
+  return new ApiError(kindFromResponse(res.status, map), res.status)
 }
 
 export const api = {
@@ -85,7 +85,7 @@ export const api = {
     url.searchParams.set('deviceId', deviceId)
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `quota HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     return {
       remaining: Number(map.remaining ?? 0),
       used: Number(map.used ?? 0),
@@ -107,9 +107,7 @@ export const api = {
     })
     const map = await decodeMap(res)
     throwIfPaywall(res, map)
-    if (!res.ok) {
-      throw new Error(truncateApiError(String(map.error ?? map.message ?? `scan HTTP ${res.status}`)))
-    }
+    if (!res.ok) throw toApiError(res, map)
 
     const names: string[] = []
     const raw = map.ingredients
@@ -160,7 +158,7 @@ export const api = {
       body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `match HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const mealsRaw = map.meals
     if (!Array.isArray(mealsRaw) || !mealsRaw.length) return []
     const recipes: Recipe[] = []
@@ -202,16 +200,16 @@ export const api = {
       body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `dinners HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const mealsRaw = map.meals
-    if (!Array.isArray(mealsRaw) || !mealsRaw.length) throw new Error('dinners returned no meals')
+    if (!Array.isArray(mealsRaw) || !mealsRaw.length) throw new ApiError('busy')
     const recipes: Recipe[] = []
     mealsRaw.forEach((raw, i) => {
       if (!raw || typeof raw !== 'object') return
       const r = recipeFromJson(raw as Record<string, unknown>, i)
       if (r) recipes.push(r)
     })
-    if (!recipes.length) throw new Error('dinners returned no usable recipes')
+    if (!recipes.length) throw new ApiError('busy')
     return recipes.map((r) => mealMatchFromRecipe(r, opts.available, soon))
   },
 
@@ -222,7 +220,7 @@ export const api = {
     if (preferences.length) url.searchParams.set('preferences', preferences.join(','))
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `search HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     return recipesFromSearchResponse(map)
   },
 
@@ -232,7 +230,7 @@ export const api = {
     })
     const map = await decodeMap(res)
     if (res.status === 404) return null
-    if (!res.ok) throw new Error(String(map.error ?? `getRecipe HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const raw = map.recipe
     if (!raw || typeof raw !== 'object') return null
     return recipeFromJson(raw as Record<string, unknown>)
@@ -248,8 +246,11 @@ export const api = {
     })
     const map = await decodeMap(res)
     throwIfPaywall(res, map)
-    if (res.status === 429) throw new Error(String(map.error ?? 'rate limited'))
-    if (!res.ok) return []
+    if (!res.ok) throw toApiError(res, map)
+    // Older backends reported AI failures with a 200 + error code.
+    if (map.code === 'GEMINI_ERROR' || (typeof map.error === 'string' && map.error)) {
+      throw new ApiError(kindFromResponse(503, map), res.status)
+    }
     return recipesFromSearchResponse(map)
   },
 
@@ -259,7 +260,7 @@ export const api = {
     url.searchParams.set('limit', String(limit))
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `food search HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const raw = map.foods
     if (!Array.isArray(raw)) return []
     return raw
@@ -273,7 +274,7 @@ export const api = {
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     const map = await decodeMap(res)
     if (res.status === 404) return null
-    if (!res.ok) throw new Error(String(map.error ?? `getFood HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const raw = map.food
     if (!raw || typeof raw !== 'object') return null
     return parseFoodItem(raw as Record<string, unknown>)
@@ -288,7 +289,7 @@ export const api = {
       body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
-    if (res.status === 429) throw new Error(String(map.error ?? 'rate limited'))
+    if (res.status === 429 || res.status >= 500) throw toApiError(res, map)
     if (!res.ok) return null
     const raw = map.food
     if (!raw || typeof raw !== 'object') return null
@@ -306,7 +307,7 @@ export const api = {
     })
     const map = await decodeMap(res)
     if (res.status === 404) return null
-    if (!res.ok) throw new Error(String(map.error ?? `scale HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const raw = map.macros
     if (!raw || typeof raw !== 'object') return null
     const j = raw as Record<string, unknown>
@@ -330,7 +331,7 @@ export const api = {
     const res = await fetch(url, { headers: { Accept: 'application/json' } })
     const map = await decodeMap(res)
     if (res.status === 404) return null
-    if (!res.ok) throw new Error(String(map.error ?? `food nutrition HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     const foodRaw = map.food
     if (!foodRaw || typeof foodRaw !== 'object') return null
     const food = parseFoodItem(foodRaw as Record<string, unknown>)
@@ -371,7 +372,7 @@ export const api = {
       body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `week-plan HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     return parseWeekPlan(map)
   },
 
@@ -401,7 +402,7 @@ export const api = {
       body: JSON.stringify(body),
     })
     const map = await decodeMap(res)
-    if (!res.ok) throw new Error(String(map.error ?? `nutrition plan HTTP ${res.status}`))
+    if (!res.ok) throw toApiError(res, map)
     return parseDietPlan(map)
   },
 }

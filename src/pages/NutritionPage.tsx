@@ -6,6 +6,7 @@ import { MacroCards } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { errorKey } from '../lib/friendlyError'
 import { usePageSeo } from '../lib/documentMeta'
 
 type Tab = 'calc' | 'micros'
@@ -251,11 +252,11 @@ export function NutritionPage() {
       if (!list.length) setError(query ? `No foods found for “${query}”.` : 'No foods found')
     } catch (e) {
       setFoods([])
-      setError(e instanceof Error ? e.message : 'Search failed. Check your connection.')
+      setError(t(errorKey(e)))
     } finally {
       setBusy(false)
     }
-  }, [q, deviceId])
+  }, [q, deviceId, t])
 
   const pick = useCallback(
     async (food: FoodItem, g = grams) => {
@@ -276,13 +277,13 @@ export function NutritionPage() {
       } catch (e) {
         setSelected({ food, grams: amount, micronutrients: [] })
         if (tab === 'micros') {
-          setError(e instanceof Error ? e.message : 'Could not load micronutrients')
+          setError(t(errorKey(e)))
         }
       } finally {
         setDetailBusy(false)
       }
     },
-    [grams, deviceId, tab],
+    [grams, deviceId, tab, t],
   )
 
   const backToResults = () => {

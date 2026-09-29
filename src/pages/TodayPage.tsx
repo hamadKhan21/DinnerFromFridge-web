@@ -5,6 +5,7 @@ import type { FoodItem } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { localDateString, useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { errorKey } from '../lib/friendlyError'
 import { usePageSeo } from '../lib/documentMeta'
 
 function fmt(v: number) {
@@ -117,7 +118,7 @@ export function TodayPage() {
       if (!list.length) setError(t('today.noFoods'))
     } catch (e) {
       setFoods([])
-      setError(e instanceof Error ? e.message : t('today.searchFailed'))
+      setError(t(errorKey(e)))
     } finally {
       setBusy(false)
     }

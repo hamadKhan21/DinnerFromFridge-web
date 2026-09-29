@@ -1,3 +1,4 @@
+import { ERROR_STRINGS } from './errorStrings'
 import { GROWTH_STRINGS } from './growthStrings'
 
 export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'tr' | 'ur'
@@ -713,12 +714,12 @@ const ur: Dict = {
 }
 
 export const TRANSLATIONS: Record<Locale, Dict> = {
-  en: { ...en, ...GROWTH_STRINGS.en },
-  ar: { ...ar, ...GROWTH_STRINGS.ar },
-  es: { ...es, ...GROWTH_STRINGS.es },
-  fr: { ...fr, ...GROWTH_STRINGS.fr },
-  tr: { ...tr, ...GROWTH_STRINGS.tr },
-  ur: { ...ur, ...GROWTH_STRINGS.ur },
+  en: { ...en, ...GROWTH_STRINGS.en, ...ERROR_STRINGS.en },
+  ar: { ...ar, ...GROWTH_STRINGS.ar, ...ERROR_STRINGS.ar },
+  es: { ...es, ...GROWTH_STRINGS.es, ...ERROR_STRINGS.es },
+  fr: { ...fr, ...GROWTH_STRINGS.fr, ...ERROR_STRINGS.fr },
+  tr: { ...tr, ...GROWTH_STRINGS.tr, ...ERROR_STRINGS.tr },
+  ur: { ...ur, ...GROWTH_STRINGS.ur, ...ERROR_STRINGS.ur },
 }
 
 export function translate(

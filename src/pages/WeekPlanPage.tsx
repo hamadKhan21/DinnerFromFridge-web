@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { PageHeader } from '../components/PageHeader'
+import { errorKey } from '../lib/friendlyError'
 import { useApp } from '../context/AppContext'
+import { useI18n } from '../i18n/I18nContext'
 import { totalMinutes } from '../lib/servingScale'
 import { usePageSeo } from '../lib/documentMeta'
 
 export function WeekPlanPage() {
   const { ingredients, dietaryPreferences, deviceId, weekPlan, setWeekPlan, rememberRecipe, addShopping } =
     useApp()
+  const { t } = useI18n()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
@@ -32,7 +35,7 @@ export function WeekPlanPage() {
       })
       setWeekPlan(plan)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate plan')
+      setError(t(errorKey(e)))
     } finally {
       setBusy(false)
     }

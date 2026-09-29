@@ -22,9 +22,14 @@ export function CookModePage() {
 
   useEffect(() => {
     if (recipe) return
-    void api.getRecipe(decodeURIComponent(id)).then((r) => {
-      if (r) setRecipe(r)
-    })
+    void api
+      .getRecipe(decodeURIComponent(id))
+      .then((r) => {
+        if (r) setRecipe(r)
+      })
+      .catch(() => {
+        /* keep the loading state; no raw errors shown */
+      })
   }, [id, recipe])
 
   const current = recipe?.steps[step]

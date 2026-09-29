@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
-import { PaywallError } from '../api/types'
+import { PaywallError, type ApiErrorKind } from '../api/types'
+import { ErrorNotice } from '../components/ErrorNotice'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
-import { prepareImageBase64, truncateError } from '../lib/imagePrepare'
+import { errorKind } from '../lib/friendlyError'
+import { prepareImageBase64 } from '../lib/imagePrepare'
 import { usePageSeo } from '../lib/documentMeta'
 import { takePendingScan } from '../lib/pendingScan'
 import { clearFridgeThumb, saveFridgeThumb } from '../lib/storyCard'
@@ -16,7 +18,8 @@ export function CapturePage() {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ApiErrorKind | null>(null)
+  const lastFileRef = useRef<File | null>(null)
 
   usePageSeo({
     title: 'Scan your fridge | Dinner From Fridge',
@@ -25,6 +28,7 @@ export function CapturePage() {
   })
 
   const runScan = async (file: File) => {
+    lastFileRef.current = file
     setBusy(true)
     setError(null)
     try {
@@ -40,19 +44,8 @@ export function CapturePage() {
       if (e instanceof PaywallError) {
         navigate('/paywall')
       } else {
-        const raw = e instanceof Error ? e.message : 'Scan failed'
-        const lower = raw.toLowerCase()
-        if (
-          lower.includes('could not read') ||
-          lower.includes('decode') ||
-          lower.includes('empty') ||
-          lower.includes('heic') ||
-          lower.includes('unsupported')
-        ) {
-          setError(t('capture.photoError'))
-        } else {
-          setError(truncateError(raw))
-        }
+        // Only friendly, localized copy — never raw error text.
+        setError(errorKind(e))
       }
     } finally {
       setBusy(false)
@@ -109,8 +102,26 @@ export function CapturePage() {
           </div>
         )}
 
-        {error ? <p className="mt-4 text-sm text-missing">{error}</p> : null}
-        {!busy ? (
+        {error && !busy ? (
+          <>
+            <ErrorNotice
+              kind={error}
+              showAlternatives
+              onRetry={
+                lastFileRef.current && error !== 'bad_image'
+                  ? () => {
+                      const f = lastFileRef.current
+                      if (f) void runScan(f)
+                    }
+                  : undefined
+              }
+            />
+            {error === 'busy' || error === 'unavailable' || error === 'bad_image' || error === 'offline' ? (
+              <p className="mt-2 text-xs text-muted">{t('err.noScanUsed')}</p>
+            ) : null}
+          </>
+        ) : null}
+        {!busy && !error ? (
           <Link to="/sample-fridge" className="mt-5 block text-center text-sm font-semibold text-terracotta">
             ✨ {t('hero.trySample')}
           </Link>

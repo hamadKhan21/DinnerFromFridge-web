@@ -3,7 +3,9 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { api } from '../api/client'
 import type { Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
+import { errorKey } from '../lib/friendlyError'
 import { useApp } from '../context/AppContext'
+import { useI18n } from '../i18n/I18nContext'
 import { buildItemListJsonLd, usePageSeo } from '../lib/documentMeta'
 import { COOK_TIME_LANDINGS, cookLandingBySlug } from '../lib/seoLandings'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
@@ -12,6 +14,7 @@ export function CookLandingPage() {
   const { id: slug = '' } = useParams()
   const landing = cookLandingBySlug(slug)
   const { rememberRecipe, dietaryPreferences } = useApp()
+  const { t } = useI18n()
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,7 +56,7 @@ export function CookLandingPage() {
           .slice(0, 24)
         if (!cancelled) setRecipes(filtered)
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load')
+        if (!cancelled) setError(errorKey(e))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -86,7 +89,7 @@ export function CookLandingPage() {
           ))}
         </div>
 
-        {error ? <p className="mt-4 text-sm text-missing">{error}</p> : null}
+        {error ? <p className="mt-4 text-sm text-missing">{t(error)}</p> : null}
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-chip border-t-terracotta" />

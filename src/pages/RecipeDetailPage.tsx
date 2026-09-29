@@ -16,6 +16,7 @@ import {
 import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
 import { keyIngredients, RecipeStoryShare } from '../components/RecipeStoryShare'
 import { useI18n } from '../i18n/I18nContext'
+import { errorKey } from '../lib/friendlyError'
 import { loadFridgeThumb } from '../lib/storyCard'
 import { cookedToday, recordCooked } from '../lib/streaks'
 
@@ -221,14 +222,14 @@ export function RecipeDetailPage() {
         const r = await api.getRecipe(decodeURIComponent(id))
         if (cancelled) return
         if (!r) {
-          setError('Recipe not found')
+          setError(t('err.not_found'))
         } else {
           setRecipe(r)
           setServings(r.servings)
           rememberRecipe(r)
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load')
+        if (!cancelled) setError(t(errorKey(e)))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -289,7 +290,7 @@ export function RecipeDetailPage() {
     return (
       <div>
         <PageHeader title="Recipe" back />
-        <p className="p-6 text-missing">{error ?? 'Not found'}</p>
+        <p className="p-6 text-missing">{error ?? t('err.not_found')}</p>
       </div>
     )
   }

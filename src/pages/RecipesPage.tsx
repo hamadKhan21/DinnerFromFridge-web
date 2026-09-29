@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api/client'
-import { PaywallError, type Recipe } from '../api/types'
+import { PaywallError, type ApiErrorKind, type Recipe } from '../api/types'
+import { ErrorNotice } from '../components/ErrorNotice'
 import { ActiveDietBar } from '../components/ActiveDietBar'
 import { DietChips } from '../components/DietChips'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
+import { errorKey, errorKind } from '../lib/friendlyError'
 import { usePageSeo } from '../lib/documentMeta'
 import { difficultyLabel, totalMinutes } from '../lib/servingScale'
 
@@ -28,6 +30,7 @@ export function RecipesPage() {
   const [loading, setLoading] = useState(false)
   const [aiBusy, setAiBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [aiError, setAiError] = useState<ApiErrorKind | null>(null)
   const [note, setNote] = useState<string | null>(null)
   const navigate = useNavigate()
 
@@ -45,13 +48,14 @@ export function RecipesPage() {
   const search = async (query: string, prefs = dietaryPreferences) => {
     setLoading(true)
     setError(null)
+    setAiError(null)
     setNote(null)
     try {
       const recipes = await api.searchRecipes(query, 24, prefs)
       setResults(recipes)
       if (!recipes.length && query.trim()) setNote(t('recipes.noHits'))
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed')
+      setError(t(errorKey(e)))
     } finally {
       setLoading(false)
     }
@@ -68,6 +72,7 @@ export function RecipesPage() {
     if (!q.trim()) return
     setAiBusy(true)
     setError(null)
+    setAiError(null)
     try {
       const recipes = await api.lookupRecipe(q.trim(), deviceId)
       setResults(recipes)
@@ -78,7 +83,7 @@ export function RecipesPage() {
         setQuota(e.remaining, 3 - e.remaining, 3)
         navigate('/paywall')
       } else {
-        setError(e instanceof Error ? e.message : 'Lookup failed')
+        setAiError(errorKind(e))
       }
     } finally {
       setAiBusy(false)
@@ -128,6 +133,9 @@ export function RecipesPage() {
         </button>
         {note ? <p className="mt-2 text-xs text-muted">{note}</p> : null}
         {error ? <p className="mt-2 text-sm text-missing">{error}</p> : null}
+        {aiError && !aiBusy ? (
+          <ErrorNotice kind={aiError} onRetry={() => void askAi()} showAlternatives />
+        ) : null}
 
         {loading ? (
           <div className="flex justify-center py-12">

@@ -213,3 +213,28 @@ export interface NutritionTargets {
   fatG: number
   updatedAtMillis?: number | null
 }
+
+/**
+ * User-safe error kinds. The UI maps these to localized copy — raw server /
+ * provider text is never shown.
+ */
+export type ApiErrorKind =
+  | 'busy'
+  | 'unavailable'
+  | 'bad_image'
+  | 'quota_exceeded'
+  | 'rate_limited'
+  | 'offline'
+  | 'not_found'
+  | 'generic'
+
+export class ApiError extends Error {
+  kind: ApiErrorKind
+  status: number
+  constructor(kind: ApiErrorKind, status = 0) {
+    super(kind)
+    this.name = 'ApiError'
+    this.kind = kind
+    this.status = status
+  }
+}
