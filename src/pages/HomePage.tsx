@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { DietChips } from '../components/DietChips'
 import { InstallBanner } from '../components/InstallBanner'
+import { SnapButton } from '../components/SnapButton'
+import { StreakCard } from '../components/StreakCard'
 import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
 import {
@@ -9,6 +11,7 @@ import {
   usePageSeo,
 } from '../lib/documentMeta'
 import { COOK_TIME_LANDINGS, CUISINE_LANDINGS } from '../lib/seoLandings'
+import { HUBS } from '../lib/hubs'
 
 export function HomePage() {
   const {
@@ -59,10 +62,31 @@ export function HomePage() {
         </div>
       </div>
 
-      <h1 className="whitespace-pre-line text-3xl font-extrabold leading-tight text-ink">
-        {t('home.whatsForDinner')}
-      </h1>
-      <p className="mt-2 text-muted">{t('home.subtitle')}</p>
+      <section className="rounded-3xl bg-gradient-to-br from-terracotta to-terracotta-dark px-5 pb-5 pt-6 text-white shadow-lg">
+        <h1 className="whitespace-pre-line text-3xl font-extrabold leading-tight">{t('home.whatsForDinner')}</h1>
+        <p className="mt-2 text-white/90">{t('hero.subtitle')}</p>
+        <div className="mt-5">
+          <SnapButton label={t('hero.snap')} hint={t('hero.snapHint')} />
+        </div>
+        <Link
+          to="/sample-fridge"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/60 bg-white/10 px-4 py-3 font-bold text-white backdrop-blur"
+        >
+          ✨ {t('hero.trySample')}
+        </Link>
+        <div className="mt-3 flex items-center justify-between text-sm text-white/85">
+          <Link to="/ingredients" className="font-semibold underline underline-offset-2">
+            ✏️ {t('hero.typeInstead')}
+          </Link>
+          <span>
+            {quotaRemaining < 3
+              ? quotaRemaining === 1
+                ? t('home.oneFreeLeft')
+                : t('home.freeLeft', { n: quotaRemaining })
+              : t('hero.freeScans')}
+          </span>
+        </div>
+      </section>
 
       <InstallBanner />
 
@@ -109,36 +133,42 @@ export function HomePage() {
         </span>
       </Link>
 
-      <div className="mt-8 space-y-3">
-        <Link
-          to="/capture"
-          className="flex items-center gap-4 rounded-2xl bg-terracotta px-5 py-4 text-white shadow-sm"
-        >
-          <span className="text-3xl">📸</span>
-          <div>
-            <div className="font-bold">{t('home.scanFridge')}</div>
-            <div className="text-sm text-white/80">{t('home.scanHint')}</div>
+      <StreakCard />
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Link to="/leftover-rescue" className="rounded-2xl border border-sage/40 bg-white p-4 shadow-sm">
+          <div className="text-2xl" aria-hidden>
+            🥡
           </div>
+          <div className="mt-1 font-bold text-ink">{t('leftovers.homeTile')}</div>
+          <div className="text-xs text-muted">{t('leftovers.homeTileHint')}</div>
         </Link>
-        <Link
-          to="/ingredients"
-          className="flex items-center gap-4 rounded-2xl border border-terracotta bg-white px-5 py-4 text-terracotta-dark"
-        >
-          <span className="text-3xl">✏️</span>
-          <div>
-            <div className="font-bold">{t('home.enterManually')}</div>
-            <div className="text-sm text-muted">{t('home.enterHint')}</div>
+        <Link to="/challenge" className="rounded-2xl border border-terracotta/30 bg-white p-4 shadow-sm">
+          <div className="text-2xl" aria-hidden>
+            🧑‍🍳
           </div>
+          <div className="mt-1 font-bold text-ink">{t('challenge.title')}</div>
+          <div className="text-xs text-muted">{t('challenge.homeTileHint')}</div>
         </Link>
       </div>
 
-      {quotaRemaining < 3 ? (
-        <p className="mt-3 text-sm text-muted">
-          {quotaRemaining === 1
-            ? t('home.oneFreeLeft')
-            : t('home.freeLeft', { n: quotaRemaining })}
-        </p>
-      ) : null}
+      <section className="mt-6">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">{t('hub.collections')}</h2>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {HUBS.map((h) => (
+            <Link
+              key={h.slug}
+              to={`/${h.slug}`}
+              className="flex items-center gap-2 rounded-2xl bg-chip/70 px-3 py-3 text-sm font-bold text-ink hover:bg-terracotta/15"
+            >
+              <span className="text-xl" aria-hidden>
+                {h.emoji}
+              </span>
+              {t(`hub.name.${h.slug}`)}
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section className="mt-6">
         <p className="mb-2 text-sm font-semibold text-muted">Diet preferences</p>

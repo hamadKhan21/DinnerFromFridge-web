@@ -76,6 +76,16 @@ Log in with `npx wrangler login` first if needed.
 - Shopping list
 - Settings: quota, dietary prefs, about, privacy/terms links
 
+## Growth features
+
+- **Story share cards** (`src/lib/storyCard.ts`, `ShareSheet`): 1080×1920 images drawn on canvas on the device (dish, time, key ingredients, optional fridge photo, logo, site CTA). Share image (Web Share with file) / WhatsApp / copy link / save.
+- **Snap your fridge hero + sample fridge** (`/sample-fridge`): static pre-made result in `src/data/sampleFridge.json` — no scan, no free-use quota.
+- **Challenge links**: `/challenge?i=eggs,spinach,bell+pepper` (commas between items, `+` between words).
+- **Leftover rescue**: `/leftover-rescue?i=…` (`/leftovers` 301s here) — recipes with 2–4 non-staple ingredients.
+- **Streaks + savings** (`/streak`): home-cooked dinners in localStorage, weekly streak, estimated savings (default 12/meal, configurable), badge image.
+- **Hubs**: `/ramadan`, `/eid`, `/desi`, `/arabic` (`src/lib/hubs.ts`, localized in all 6 languages).
+- Catalog-backed pages use `public/catalog-index.json` (refresh with `npm run catalog`). OG cards live in `public/og/` (`npm run og-images`, needs Python + Pillow). `functions/_middleware.ts` serves OG/bot HTML for all of the above plus `/s/…` share links.
+
 ## Gaps vs Flutter mobile
 
 - No native camera / ML Kit on-device OCR (web uses file upload + Worker scan only)

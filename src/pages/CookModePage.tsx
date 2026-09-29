@@ -6,6 +6,7 @@ import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { ingredientDisplayLabel } from '../lib/servingScale'
 import { applyPageSeo } from '../lib/documentMeta'
+import { recordCooked } from '../lib/streaks'
 
 export function CookModePage() {
   const { id = '' } = useParams()
@@ -128,6 +129,7 @@ export function CookModePage() {
                   source: 'recipe',
                   recipeId: recipe.id,
                 })
+                recordCooked({ recipeId: recipe.id, title: recipe.title })
                 setLogMsg(`Logged · ${Math.round(n.calories)} cal`)
                 window.setTimeout(() => setLogMsg(null), 3500)
               }}
@@ -180,7 +182,10 @@ export function CookModePage() {
           ) : (
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                recordCooked({ recipeId: recipe.id, title: recipe.title })
+                navigate('/streak?cooked=1', { replace: true })
+              }}
               className="flex-1 rounded-2xl bg-sage py-3 font-semibold text-white"
             >
               Done 🎉

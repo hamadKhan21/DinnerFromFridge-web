@@ -1,0 +1,319 @@
+{
+ "ingredients": [
+  "Eggs",
+  "Tomatoes",
+  "Spinach",
+  "Greek yogurt",
+  "Onion",
+  "Garlic",
+  "Cilantro",
+  "Carrots",
+  "Green onion",
+  "Cooked rice",
+  "Bell pepper"
+ ],
+ "recipes": [
+  {
+   "id": "fridge-tomato-egg-scramble",
+   "title": "Tomato Egg Scramble",
+   "description": "Comforting Chinese-style tomatoes and eggs.",
+   "emoji": "🍅",
+   "prepMinutes": 5,
+   "cookMinutes": 10,
+   "servings": 2,
+   "difficulty": "easy",
+   "tags": [
+    "fridge",
+    "eggs",
+    "quick",
+    "comfort",
+    "seed",
+    "no-oven",
+    "catalog",
+    "vegetarian",
+    "gluten-free",
+    "halal",
+    "high-protein"
+   ],
+   "minutes": 15,
+   "cuisine": [
+    "fridge",
+    "eggs",
+    "quick",
+    "comfort",
+    "seed",
+    "no-oven",
+    "vegetarian",
+    "gluten-free",
+    "halal",
+    "high-protein"
+   ],
+   "ingredients": [
+    {
+     "name": "eggs",
+     "quantity": "4"
+    },
+    {
+     "name": "tomato",
+     "quantity": "3"
+    },
+    {
+     "name": "green onion",
+     "quantity": "2"
+    },
+    {
+     "name": "oil",
+     "quantity": "2",
+     "unit": "tbsp"
+    },
+    {
+     "name": "salt",
+     "quantity": "3/4",
+     "unit": "tsp"
+    },
+    {
+     "name": "sugar",
+     "quantity": "1",
+     "unit": "tsp"
+    }
+   ],
+   "steps": [
+    {
+     "instruction": "Beat eggs with a pinch of salt."
+    },
+    {
+     "instruction": "Chop tomatoes and green onions."
+    },
+    {
+     "instruction": "Scramble eggs in hot oil until just set; remove.",
+     "timerSeconds": 90
+    },
+    {
+     "instruction": "Sauté tomatoes until juicy; add sugar and salt.",
+     "timerSeconds": 180
+    },
+    {
+     "instruction": "Return eggs, fold gently, top with green onion."
+    }
+   ],
+   "source": "fridge",
+   "nutrition": {
+    "calories": 353,
+    "protein": 16.2,
+    "carbs": 18.2,
+    "fat": 25.1,
+    "perServing": true,
+    "fiber": 5,
+    "sugar": 2.7,
+    "sodium": 530,
+    "source": "estimated"
+   }
+  },
+  {
+   "id": "seed-egg-masala-dinner",
+   "title": "Egg Masala Dinner",
+   "description": "Eggs in spicy tomato masala.",
+   "emoji": "🥚",
+   "prepMinutes": 9,
+   "cookMinutes": 21,
+   "servings": 4,
+   "difficulty": "easy",
+   "tags": [
+    "indian",
+    "eggs",
+    "curry",
+    "vegetarian",
+    "no-oven",
+    "seed",
+    "catalog",
+    "gluten-free",
+    "halal",
+    "high-protein"
+   ],
+   "minutes": 30,
+   "cuisine": [
+    "indian",
+    "eggs",
+    "curry",
+    "vegetarian",
+    "no-oven",
+    "seed",
+    "gluten-free",
+    "halal",
+    "high-protein"
+   ],
+   "ingredients": [
+    {
+     "name": "eggs",
+     "quantity": "4"
+    },
+    {
+     "name": "onion",
+     "quantity": "1",
+     "unit": "large"
+    },
+    {
+     "name": "tomato",
+     "quantity": "2"
+    },
+    {
+     "name": "garlic",
+     "quantity": "4",
+     "unit": "cloves"
+    },
+    {
+     "name": "ginger",
+     "quantity": "1",
+     "unit": "tbsp"
+    },
+    {
+     "name": "garam masala",
+     "quantity": "1",
+     "unit": "tsp"
+    },
+    {
+     "name": "oil",
+     "quantity": "2",
+     "unit": "tbsp"
+    },
+    {
+     "name": "salt",
+     "quantity": "1.5",
+     "unit": "tsp"
+    },
+    {
+     "name": "cilantro",
+     "quantity": "1/4",
+     "unit": "cup"
+    },
+    {
+     "name": "rice",
+     "quantity": "1.5",
+     "unit": "cups"
+    }
+   ],
+   "steps": [
+    {
+     "instruction": "Boil eggs."
+    },
+    {
+     "instruction": "Simmer masala; add eggs. Rice."
+    }
+   ],
+   "source": "seed",
+   "nutrition": {
+    "calories": 400,
+    "protein": 18,
+    "carbs": 35,
+    "fat": 18,
+    "perServing": true,
+    "fiber": 0,
+    "sugar": 0,
+    "sodium": 0,
+    "source": "estimate"
+   }
+  },
+  {
+   "id": "fridge-fried-rice",
+   "title": "Fridge Fried Rice",
+   "description": "Use leftover rice and whatever veggies you have.",
+   "emoji": "🍚",
+   "prepMinutes": 6,
+   "cookMinutes": 14,
+   "servings": 2,
+   "difficulty": "easy",
+   "tags": [
+    "fridge",
+    "asian",
+    "quick",
+    "leftovers",
+    "seed",
+    "no-oven",
+    "catalog",
+    "vegetarian",
+    "halal",
+    "high-protein"
+   ],
+   "minutes": 20,
+   "cuisine": [
+    "fridge",
+    "asian",
+    "quick",
+    "leftovers",
+    "seed",
+    "no-oven",
+    "vegetarian",
+    "halal",
+    "high-protein"
+   ],
+   "ingredients": [
+    {
+     "name": "rice",
+     "quantity": "2",
+     "unit": "cups"
+    },
+    {
+     "name": "eggs",
+     "quantity": "2"
+    },
+    {
+     "name": "frozen peas",
+     "quantity": "1/2",
+     "unit": "cup"
+    },
+    {
+     "name": "carrot",
+     "quantity": "1"
+    },
+    {
+     "name": "soy sauce",
+     "quantity": "2",
+     "unit": "tbsp"
+    },
+    {
+     "name": "garlic",
+     "quantity": "2",
+     "unit": "cloves"
+    },
+    {
+     "name": "green onion",
+     "quantity": "1 1/2"
+    },
+    {
+     "name": "oil",
+     "quantity": "1",
+     "unit": "tbsp"
+    }
+   ],
+   "steps": [
+    {
+     "instruction": "Scramble eggs in oil; set aside.",
+     "timerSeconds": 90
+    },
+    {
+     "instruction": "Stir-fry garlic, carrot, peas.",
+     "timerSeconds": 180
+    },
+    {
+     "instruction": "Add cold rice; break up clumps. Add soy sauce.",
+     "timerSeconds": 300
+    },
+    {
+     "instruction": "Fold in eggs and green onion."
+    }
+   ],
+   "source": "fridge",
+   "nutrition": {
+    "calories": 447,
+    "protein": 15.8,
+    "carbs": 65.4,
+    "fat": 13.1,
+    "perServing": true,
+    "fiber": 4.9,
+    "sugar": 9.8,
+    "sodium": 526,
+    "source": "estimated"
+   }
+  }
+ ]
+}

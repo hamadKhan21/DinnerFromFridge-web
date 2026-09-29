@@ -1,7 +1,12 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AboutPage } from './pages/AboutPage'
 import { CapturePage } from './pages/CapturePage'
+import { ChallengePage } from './pages/ChallengePage'
+import { HubPage } from './pages/HubPage'
+import { LeftoversPage } from './pages/LeftoversPage'
+import { SampleFridgePage } from './pages/SampleFridgePage'
+import { StreakPage } from './pages/StreakPage'
 import { CookOrModePage } from './pages/CookOrModePage'
 import { CuisineLandingPage } from './pages/CuisineLandingPage'
 import { FavoritesPage } from './pages/FavoritesPage'
@@ -44,9 +49,24 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="paywall" element={<PaywallPage />} />
         <Route path="legal/:doc" element={<LegalPage />} />
+        <Route path="sample-fridge" element={<SampleFridgePage />} />
+        <Route path="challenge" element={<ChallengePage />} />
+        <Route path="leftover-rescue" element={<LeftoversPage />} />
+        <Route path="leftovers" element={<LeftoversRedirect />} />
+        <Route path="streak" element={<StreakPage />} />
+        <Route path="ramadan" element={<HubPage key="ramadan" slug="ramadan" />} />
+        <Route path="eid" element={<HubPage key="eid" slug="eid" />} />
+        <Route path="desi" element={<HubPage key="desi" slug="desi" />} />
+        <Route path="arabic" element={<HubPage key="arabic" slug="arabic" />} />
       </Route>
       <Route path="onboarding" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
+}
+
+/** /leftovers → /leftover-rescue (keeps ?i=…) */
+function LeftoversRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={`/leftover-rescue${search}`} replace />
 }

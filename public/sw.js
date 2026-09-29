@@ -1,5 +1,5 @@
 /* Dinner From Fridge — lightweight shell cache */
-const CACHE = 'dff-shell-v1'
+const CACHE = 'dff-shell-v2'
 const PRECACHE = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/app-icon.png']
 
 self.addEventListener('install', (event) => {

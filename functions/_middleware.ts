@@ -1,3 +1,14 @@
+import {
+  challengeQuery,
+  coreIngredients,
+  joinList,
+  matchCatalog,
+  parseChallengeParam,
+  smallRecipes,
+  type CatalogEntry,
+} from '../src/lib/catalogMatch'
+import { curateHub, hubBySlug, HUBS } from '../src/lib/hubs'
+
 /**
  * Cloudflare Pages middleware: serve contentful HTML to known crawlers
  * so Google / AI bots that do not execute JS still see titles, meta, JSON-LD, and body text.
@@ -6,7 +17,9 @@
 
 const API_BASE = 'https://tonightfromthis.hamad2k9.workers.dev'
 const SITE = 'https://dinnerfromfridge.com'
-const OG_IMAGE = `${SITE}/app-icon.png`
+const LOGO = `${SITE}/app-icon.png`
+const OG_IMAGE = `${SITE}/og/default.jpg`
+const og = (slug: string) => `${SITE}/og/${slug}.jpg`
 
 const BOT_RE =
   /Googlebot|Google-Extended|bingbot|BingPreview|DuckDuckBot|Baiduspider|YandexBot|Yandex|Slurp|Applebot|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|TelegramBot|GPTBot|ChatGPT-User|ClaudeBot|anthropic-ai|Claude-Web|PerplexityBot|Bytespider|CCBot|Amazonbot|meta-externalagent|ia_archiver|SemrushBot|AhrefsBot|DotBot|PetalBot|cohere-ai/i
@@ -95,7 +108,14 @@ function htmlDoc(opts: {
   bodyHtml: string
   jsonLd?: unknown
   keywords?: string
+  image?: string
+  imageAlt?: string
+  noIndex?: boolean
+  type?: 'website' | 'article'
 }): Response {
+  const image = opts.image || OG_IMAGE
+  const imageAlt = opts.imageAlt || opts.title
+  const robots = opts.noIndex ? '<meta name="robots" content="noindex, follow" />' : ''
   const jsonLdBlock = opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, '\\u003c')}</script>`
     : ''
@@ -111,16 +131,22 @@ function htmlDoc(opts: {
   <meta name="description" content="${escapeHtml(opts.description)}" />
   ${keywords}
   <link rel="canonical" href="${escapeHtml(opts.canonical)}" />
-  <meta property="og:type" content="website" />
+  ${robots}
+  <meta property="og:type" content="${opts.type || 'website'}" />
   <meta property="og:site_name" content="Dinner From Fridge" />
   <meta property="og:title" content="${escapeHtml(opts.title)}" />
   <meta property="og:description" content="${escapeHtml(opts.description)}" />
   <meta property="og:url" content="${escapeHtml(opts.canonical)}" />
-  <meta property="og:image" content="${OG_IMAGE}" />
+  <meta property="og:image" content="${escapeHtml(image)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(image)}" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(opts.title)}" />
   <meta name="twitter:description" content="${escapeHtml(opts.description)}" />
-  <meta name="twitter:image" content="${OG_IMAGE}" />
+  <meta name="twitter:image" content="${escapeHtml(image)}" />
   <link rel="icon" type="image/png" href="/app-icon.png" />
   ${jsonLdBlock}
   <style>
@@ -137,6 +163,12 @@ ${opts.bodyHtml}
   <a href="/recipes">Recipes</a>
   <a href="/cook/30-min">Cook 30 min</a>
   <a href="/cuisine/desi">Cuisines</a>
+  <a href="/leftover-rescue">Leftover rescue</a>
+  <a href="/challenge">Fridge challenge</a>
+  <a href="/ramadan">Ramadan</a>
+  <a href="/eid">Eid</a>
+  <a href="/desi">Desi</a>
+  <a href="/arabic">Arabic</a>
   <a href="/legal/privacy">Privacy</a>
   <a href="/legal/terms">Terms</a>
 </nav>
@@ -207,7 +239,7 @@ function recipeJsonLd(r: ApiRecipe): Record<string, unknown> {
     '@type': 'Recipe',
     name: r.title,
     description: r.description || r.title,
-    image: [OG_IMAGE],
+    image: [og('recipe'), LOGO],
     url,
     totalTime: `PT${Math.max(1, Math.round(totalMinutes(r)))}M`,
     recipeYield: String(r.servings || 4),
@@ -271,6 +303,9 @@ async function renderRecipe(id: string): Promise<Response> {
     canonical: `${SITE}/recipe/${encodeURIComponent(r.id)}`,
     keywords: (r.tags || []).join(', '),
     jsonLd: recipeJsonLd(r),
+    image: og('recipe'),
+    imageAlt: `${r.title} — Dinner From Fridge`,
+    type: 'article',
     bodyHtml: body,
   })
 }
@@ -404,7 +439,7 @@ function renderHome(): Response {
       '@type': 'Organization',
       name: 'Dinner From Fridge',
       url: SITE,
-      logo: OG_IMAGE,
+      logo: LOGO,
     },
   ]
   return htmlDoc({
@@ -421,6 +456,10 @@ function renderHome(): Response {
   <li><a href="/recipes">Browse recipes</a></li>
   <li><a href="/cook/30-min">Easy dinners in 30 minutes</a></li>
   <li><a href="/cuisine/desi">Desi recipes</a> · <a href="/cuisine/arabic">Arabic</a> · <a href="/cuisine/chinese">Chinese</a> · <a href="/cuisine/mexican">Mexican</a> · <a href="/cuisine/western">Western</a></li>
+  <li><a href="/sample-fridge">Try a sample fridge</a> — see a scan result instantly</li>
+  <li><a href="/leftover-rescue">Leftover rescue</a> — 2–4 ingredient dinners, cook before you shop</li>
+  <li><a href="/challenge">Fridge challenge</a> — dare a friend to make dinner from 2–5 ingredients</li>
+  <li><a href="/ramadan">Ramadan iftar &amp; suhoor</a> · <a href="/eid">Eid leftovers</a> · <a href="/desi">Desi dinners</a> · <a href="/arabic">Arabic dinners</a></li>
   <li><a href="/about">About Dinner From Fridge</a></li>
 </ul>`,
   })
@@ -464,12 +503,223 @@ async function renderRecipes(): Promise<Response> {
   })
 }
 
+
+/* ---------------- catalog-backed growth pages ---------------- */
+
+async function loadCatalog(context: PagesContext): Promise<CatalogEntry[]> {
+  try {
+    const assets = context.env.ASSETS as { fetch: (r: Request | string) => Promise<Response> } | undefined
+    const req = new Request(new URL('/catalog-index.json', context.request.url).toString())
+    const res = assets ? await assets.fetch(req) : await fetch(req)
+    if (!res.ok) return []
+    const data = await res.json()
+    return Array.isArray(data) ? (data as CatalogEntry[]) : []
+  } catch {
+    return []
+  }
+}
+
+function entryLinks(items: CatalogEntry[]): string {
+  if (!items.length) return '<p class="muted">Browse the full catalog for more ideas.</p>'
+  return `<ul>${items
+    .map(
+      (e) =>
+        `<li><a href="/recipe/${encodeURIComponent(e.id)}">${escapeHtml(e.e)} ${escapeHtml(e.t)}</a> <span class="muted">(~${e.m} min)</span></li>`,
+    )
+    .join('')}</ul>`
+}
+
+function entryListJsonLd(name: string, description: string, path: string, items: CatalogEntry[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name,
+    description,
+    url: `${SITE}${path}`,
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: items.length,
+      itemListElement: items.map((e, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE}/recipe/${encodeURIComponent(e.id)}`,
+        name: e.t,
+      })),
+    },
+  }
+}
+
+async function renderChallenge(context: PagesContext, url: URL): Promise<Response> {
+  const items = parseChallengeParam(url.searchParams.get('i'))
+  if (items.length < 2) {
+    return htmlDoc({
+      title: 'Fridge challenge — can you make dinner from these? | Dinner From Fridge',
+      description: 'Pick 2–5 ingredients and dare a friend to make dinner from them. See matching recipes instantly.',
+      canonical: `${SITE}/challenge`,
+      image: og('challenge'),
+      bodyHtml: `<h1>Fridge challenge</h1><p>Pick 2–5 ingredients and dare a friend to make dinner from them. Example: <a href="/challenge?i=eggs,spinach,rice">Can you make dinner from eggs, spinach and rice?</a></p>`,
+    })
+  }
+  const catalog = await loadCatalog(context)
+  const matches = matchCatalog(catalog, items, { minUsed: Math.min(2, items.length), limit: 12 })
+  const list = joinList(items)
+  const title = `Can you make dinner from ${list}?`
+  const description = `🧑‍🍳 Fridge challenge: dinner from ${list}. ${matches.length ? `${matches.length} recipes can do it — ` : ''}accept the challenge on Dinner From Fridge.`
+  const path = `/challenge?i=${challengeQuery(items)}`
+  return htmlDoc({
+    title,
+    description,
+    canonical: `${SITE}${path}`,
+    image: og('challenge'),
+    imageAlt: title,
+    noIndex: true,
+    jsonLd: entryListJsonLd(title, description, path, matches.map((m) => m.entry)),
+    bodyHtml: `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><h2>Recipes that use ${escapeHtml(list)}</h2>${entryLinks(matches.map((m) => m.entry))}<p><a href="/challenge">Make your own challenge</a> · <a href="/capture">Snap your fridge</a></p>`,
+  })
+}
+
+async function renderLeftovers(context: PagesContext, url: URL): Promise<Response> {
+  const catalog = await loadCatalog(context)
+  const have = parseChallengeParam(url.searchParams.get('i'), 15)
+  const items = have.length
+    ? matchCatalog(catalog, have, { maxCore: 4, limit: 16 }).map((m) => m.entry)
+    : smallRecipes(catalog, 3, 24)
+  const title = have.length
+    ? `Leftover rescue: dinner from ${joinList(have)} | Dinner From Fridge`
+    : 'Leftover rescue: 2–4 ingredient dinners — cook before you shop | Dinner From Fridge'
+  const description =
+    'Empty fridge? Find dinners that need only 2–4 main ingredients (salt, oil and spices assumed). Cook before you shop and save money.'
+  const path = have.length ? `/leftover-rescue?i=${challengeQuery(have)}` : '/leftover-rescue'
+  return htmlDoc({
+    title,
+    description,
+    canonical: `${SITE}${path}`,
+    keywords: 'leftover recipes, few ingredient dinners, empty fridge meals, 3 ingredient dinner, cook before you shop, save money on food',
+    image: og('leftovers'),
+    noIndex: have.length > 0,
+    jsonLd: entryListJsonLd('Leftover rescue — dinners with 2–4 ingredients', description, '/leftover-rescue', items),
+    bodyHtml: `<h1>Leftover rescue: cook before you shop</h1><p>${escapeHtml(description)}</p><h2>${have.length ? `Dinners using ${escapeHtml(joinList(have))}` : 'Dinners with 3 or fewer main ingredients'}</h2><ul>${items
+      .map(
+        (e) =>
+          `<li><a href="/recipe/${encodeURIComponent(e.id)}">${escapeHtml(e.e)} ${escapeHtml(e.t)}</a> <span class="muted">(~${e.m} min · ${escapeHtml(coreIngredients(e).join(', '))})</span></li>`,
+      )
+      .join('')}</ul>`,
+  })
+}
+
+async function renderHub(context: PagesContext, slug: string): Promise<Response | null> {
+  const hub = hubBySlug(slug)
+  if (!hub) return null
+  const catalog = await loadCatalog(context)
+  const sections = curateHub(hub, catalog)
+  const en = hub.copy.en
+  const all = Object.values(sections).flat()
+  const local = (['ar', 'ur'] as const)
+    .map((l) => {
+      const c = hub.copy[l]
+      return `<section lang="${l}" dir="rtl"><h2>${escapeHtml(c.h1)}</h2><p>${escapeHtml(c.intro)}</p></section>`
+    })
+    .join('')
+  const body = `<h1>${escapeHtml(hub.emoji)} ${escapeHtml(en.h1)}</h1>
+<p>${escapeHtml(en.intro)}</p>
+${hub.sections
+  .map((s) => `<h2>${escapeHtml(en.sections[s.key]!.h)}</h2><p class="muted">${escapeHtml(en.sections[s.key]!.p)}</p>${entryLinks(sections[s.key] ?? [])}`)
+  .join('\n')}
+<h2>Tips</h2><ul>${en.tips.map((tip) => `<li>${escapeHtml(tip)}</li>`).join('')}</ul>
+${local}
+<p>More collections: ${HUBS.filter((h) => h.slug !== hub.slug).map((h) => `<a href="/${h.slug}">${escapeHtml(h.copy.en.h1)}</a>`).join(' · ')}</p>
+<p class="muted">All recipes are halal-friendly. No pork.</p>`
+  return htmlDoc({
+    title: `${en.title} | Dinner From Fridge`,
+    description: en.intro,
+    canonical: `${SITE}/${hub.slug}`,
+    keywords: hub.keywords,
+    image: og(hub.slug),
+    jsonLd: entryListJsonLd(en.h1, en.intro, `/${hub.slug}`, all),
+    bodyHtml: body,
+  })
+}
+
+function renderSample(): Response {
+  return htmlDoc({
+    title: 'Try a sample fridge — see Dinner From Fridge in one tap',
+    description: 'See how one fridge photo turns into 3 dinners you can cook tonight. Free demo — no sign-up.',
+    canonical: `${SITE}/sample-fridge`,
+    image: og('sample'),
+    bodyHtml: `<h1>Try a sample fridge</h1><p>A real fridge photo — eggs, tomatoes, yogurt, greens, rice — and the 3 dinners it suggests: Tomato Egg Scramble, Egg Masala Dinner and Fridge Fried Rice.</p><p><a href="/capture">Now snap your own fridge</a></p>`,
+  })
+}
+
+function renderStreak(): Response {
+  return htmlDoc({
+    title: 'Home-cooked streak & money saved | Dinner From Fridge',
+    description: 'Keep a weekly home-cooking streak and see an estimate of money saved versus takeout. Cook tonight from your fridge.',
+    canonical: `${SITE}/streak`,
+    image: og('streak'),
+    bodyHtml: `<h1>Home-cooked streak</h1><p>Count home-cooked dinners, keep a weekly streak and see an estimate of what you saved versus takeout.</p><p><a href="/capture">Find tonight’s dinner</a></p>`,
+  })
+}
+
+function decodeShare(raw: string): { meals: { id: string; t: string; e?: string; m?: number }[]; note?: string } | null {
+  try {
+    const padded = raw.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4))
+    const bin = atob(padded + pad)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const data = JSON.parse(new TextDecoder().decode(bytes))
+    if (!data || data.v !== 1 || !Array.isArray(data.meals) || !data.meals.length) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
+function renderShare(raw: string, prefix: string): Response {
+  const data = decodeShare(raw)
+  const canonical = `${SITE}/${prefix}/${raw}`
+  if (!data) {
+    return htmlDoc({
+      title: 'Shared dinners | Dinner From Fridge',
+      description: 'Dinner ideas from what’s already in the fridge.',
+      canonical,
+      image: og('share'),
+      noIndex: true,
+      bodyHtml: `<h1>Shared dinners</h1><p><a href="/capture">Snap your fridge</a> for dinner ideas.</p>`,
+    })
+  }
+  const meals = data.meals.slice(0, 3)
+  const names = meals.map((m) => `${m.e ? `${m.e} ` : ''}${m.t}`)
+  const title = meals.length === 1 ? `${names[0]} — tonight’s dinner` : `Tonight’s dinners: ${names.join(' · ')}`
+  const description =
+    data.note ||
+    (meals.length === 1
+      ? `Cook ${meals[0]!.t}${meals[0]!.m ? ` in about ${meals[0]!.m} minutes` : ''} from what’s in your fridge. Open the recipe on Dinner From Fridge.`
+      : `Dinner ideas picked from a real fridge: ${meals.map((m) => m.t).join(', ')}. Open them or snap your own fridge.`)
+  return htmlDoc({
+    title,
+    description,
+    canonical,
+    image: og('share'),
+    imageAlt: title,
+    noIndex: true,
+    bodyHtml: `<h1>${escapeHtml(title)}</h1><p>${escapeHtml(description)}</p><ul>${meals
+      .map((m) => `<li><a href="/recipe/${encodeURIComponent(m.id)}">${escapeHtml(m.t)}</a>${m.m ? ` <span class="muted">(~${m.m} min)</span>` : ''}</li>`)
+      .join('')}</ul><p><a href="/capture">Snap your fridge</a></p>`,
+  })
+}
+
 export const onRequest = async (context: PagesContext): Promise<Response> => {
   const url = new URL(context.request.url)
   const { pathname } = url
 
   if (shouldSkip(pathname)) {
     return context.next()
+  }
+
+  // Old / alternate paths → canonical leftover rescue URL (keeps ?i=…)
+  if (pathname === '/leftovers' || pathname === '/leftovers/' || pathname === '/leftover-rescue/') {
+    return Response.redirect(`${url.origin}/leftover-rescue${url.search}`, 301)
   }
 
   const ua = context.request.headers.get('user-agent') || ''
@@ -486,6 +736,27 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
     }
     if (pathname === '/recipes') {
       return await renderRecipes()
+    }
+    if (pathname === '/challenge' || pathname === '/challenge/') {
+      return await renderChallenge(context, url)
+    }
+    if (pathname === '/leftover-rescue') {
+      return await renderLeftovers(context, url)
+    }
+    const hubMatch = pathname.match(/^\/(ramadan|eid|desi|arabic)\/?$/)
+    if (hubMatch) {
+      const res = await renderHub(context, hubMatch[1]!)
+      if (res) return res
+    }
+    if (pathname === '/sample-fridge') {
+      return renderSample()
+    }
+    if (pathname === '/streak') {
+      return renderStreak()
+    }
+    const shareMatch = pathname.match(/^\/(s|share)\/([^/]+)\/?$/)
+    if (shareMatch) {
+      return renderShare(shareMatch[2]!, shareMatch[1]!)
     }
     const recipeMatch = pathname.match(/^\/recipe\/([^/]+)\/?$/)
     if (recipeMatch) {

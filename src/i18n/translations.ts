@@ -1,3 +1,5 @@
+import { GROWTH_STRINGS } from './growthStrings'
+
 export type Locale = 'en' | 'ar' | 'es' | 'fr' | 'tr' | 'ur'
 
 export const LOCALES: { code: Locale; label: string }[] = [
@@ -710,7 +712,14 @@ const ur: Dict = {
   'legal.termsTitle': 'استعمال کی شرائط',
 }
 
-export const TRANSLATIONS: Record<Locale, Dict> = { en, ar, es, fr, tr, ur }
+export const TRANSLATIONS: Record<Locale, Dict> = {
+  en: { ...en, ...GROWTH_STRINGS.en },
+  ar: { ...ar, ...GROWTH_STRINGS.ar },
+  es: { ...es, ...GROWTH_STRINGS.es },
+  fr: { ...fr, ...GROWTH_STRINGS.fr },
+  tr: { ...tr, ...GROWTH_STRINGS.tr },
+  ur: { ...ur, ...GROWTH_STRINGS.ur },
+}
 
 export function translate(
   locale: Locale,

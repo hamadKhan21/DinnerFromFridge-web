@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api/client'
 import { PaywallError } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
@@ -7,6 +7,8 @@ import { useApp } from '../context/AppContext'
 import { useI18n } from '../i18n/I18nContext'
 import { prepareImageBase64, truncateError } from '../lib/imagePrepare'
 import { usePageSeo } from '../lib/documentMeta'
+import { takePendingScan } from '../lib/pendingScan'
+import { clearFridgeThumb, saveFridgeThumb } from '../lib/storyCard'
 
 export function CapturePage() {
   const { deviceId, setIngredients, setQuota } = useApp()
@@ -27,7 +29,10 @@ export function CapturePage() {
     setError(null)
     try {
       const { imageBase64, mimeType } = await prepareImageBase64(file)
+      clearFridgeThumb()
       const result = await api.scan(deviceId, imageBase64, mimeType)
+      // Small copy of the photo for the optional story card (stays in this tab only)
+      await saveFridgeThumb(imageBase64)
       setQuota(result.remaining, result.used, result.limit)
       setIngredients(result.ingredients)
       navigate('/ingredients', { replace: true })
@@ -54,6 +59,12 @@ export function CapturePage() {
       if (inputRef.current) inputRef.current.value = ''
     }
   }
+
+  // Photo picked from the Home "Snap your fridge" button
+  useEffect(() => {
+    const f = takePendingScan()
+    if (f) void runScan(f)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -99,6 +110,11 @@ export function CapturePage() {
         )}
 
         {error ? <p className="mt-4 text-sm text-missing">{error}</p> : null}
+        {!busy ? (
+          <Link to="/sample-fridge" className="mt-5 block text-center text-sm font-semibold text-terracotta">
+            ✨ {t('hero.trySample')}
+          </Link>
+        ) : null}
         <p className="mt-6 text-xs text-muted">{t('capture.quotaNote')}</p>
       </div>
     </div>

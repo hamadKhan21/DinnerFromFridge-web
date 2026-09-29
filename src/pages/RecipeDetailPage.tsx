@@ -14,6 +14,10 @@ import {
   setJsonLd,
 } from '../lib/documentMeta'
 import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
+import { keyIngredients, RecipeStoryShare } from '../components/RecipeStoryShare'
+import { useI18n } from '../i18n/I18nContext'
+import { loadFridgeThumb } from '../lib/storyCard'
+import { cookedToday, recordCooked } from '../lib/streaks'
 
 /** Resolve the element that actually scrolls (overflow parent only if it overflows). */
 function findActualScrollParent(el: HTMLElement | null): HTMLElement {
@@ -201,6 +205,9 @@ export function RecipeDetailPage() {
   const pageRootRef = useRef<HTMLDivElement>(null)
   const [shareMsg, setShareMsg] = useState<string | null>(null)
   const [logMsg, setLogMsg] = useState<string | null>(null)
+  const [storyOpen, setStoryOpen] = useState(false)
+  const [cookedMsg, setCookedMsg] = useState<string | null>(null)
+  const { t } = useI18n()
 
   useEffect(() => {
     if (recipe) {
@@ -327,6 +334,13 @@ export function RecipeDetailPage() {
               Share
             </button>
             {shareMsg ? <span className="text-[10px] font-semibold text-have">{shareMsg}</span> : null}
+            <button
+              type="button"
+              className="rounded-full bg-terracotta px-3 py-1 text-xs font-semibold text-white"
+              onClick={() => setStoryOpen(true)}
+            >
+              📲 {t('share.story')}
+            </button>
           </div>
         </div>
 
@@ -371,6 +385,7 @@ export function RecipeDetailPage() {
                   source: 'recipe',
                   recipeId: recipe.id,
                 })
+                recordCooked({ recipeId: recipe.id, title: recipe.title })
                 setLogMsg(`Logged · ${Math.round(n.calories)} cal`)
                 window.setTimeout(() => setLogMsg(null), 3500)
               }}
@@ -390,6 +405,26 @@ export function RecipeDetailPage() {
         ) : (
           <p className="mt-3 text-center text-xs text-muted">Nutrition not available for this recipe</p>
         )}
+
+        <button
+          type="button"
+          onClick={() => {
+            const counted = recordCooked({ recipeId: recipe.id, title: recipe.title })
+            setCookedMsg(counted ? t('streak.counted') : t('streak.alreadyCounted'))
+            window.setTimeout(() => setCookedMsg(null), 3500)
+          }}
+          className="mt-3 w-full rounded-2xl bg-sage/15 py-3 font-semibold text-have"
+        >
+          {cookedToday(recipe.id) ? '✅' : '🍳'} {t('streak.iCookedThis')}
+        </button>
+        {cookedMsg ? (
+          <p className="mt-2 text-center text-sm font-semibold text-have">
+            {cookedMsg} ·{' '}
+            <Link to="/streak" className="underline">
+              {t('streak.title')}
+            </Link>
+          </p>
+        ) : null}
 
         <h3 className="mt-6 font-bold">Ingredients</h3>
         <ul className="mt-2 space-y-1.5">
@@ -441,6 +476,19 @@ export function RecipeDetailPage() {
       </div>
 
       <ScrollMoreCue stepsRef={stepsHeadingRef} anchorRef={pageRootRef} />
+
+      <RecipeStoryShare
+        open={storyOpen}
+        onClose={() => setStoryOpen(false)}
+        recipe={{
+          id: recipe.id,
+          title: recipe.title,
+          emoji: recipe.emoji,
+          minutes: totalMinutes(recipe),
+          ingredients: keyIngredients(recipe.ingredients.map((i) => i.name)),
+        }}
+        photo={have.length ? loadFridgeThumb() : null}
+      />
 
       <div
         className="fixed left-0 right-0 z-40 border-t border-terracotta/10 bg-warm-white/95 px-4 py-3 backdrop-blur"

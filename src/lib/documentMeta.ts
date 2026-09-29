@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 
 export const SITE_ORIGIN = 'https://dinnerfromfridge.com'
 export const SITE_NAME = 'Dinner From Fridge'
-export const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/app-icon.png`
+export const DEFAULT_OG_IMAGE = `${SITE_ORIGIN}/og/default.jpg`
+export const LOGO_IMAGE = `${SITE_ORIGIN}/app-icon.png`
 
 export type PageSeo = {
   title: string
@@ -207,7 +208,7 @@ export function buildRecipeJsonLd(recipe: {
     '@type': 'Recipe',
     name: recipe.title,
     description: recipe.description,
-    image: [DEFAULT_OG_IMAGE],
+    image: [`${SITE_ORIGIN}/og/recipe.jpg`, LOGO_IMAGE],
     url,
     mainEntityOfPage: url,
     totalTime: recipeMinutesIso(recipe.totalMinutes),
@@ -215,7 +216,7 @@ export function buildRecipeJsonLd(recipe: {
     recipeIngredient: ingredientStrings,
     recipeInstructions: steps,
     author: { '@type': 'Organization', name: SITE_NAME, url: SITE_ORIGIN },
-    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_ORIGIN, logo: DEFAULT_OG_IMAGE },
+    publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_ORIGIN, logo: LOGO_IMAGE },
   }
   if (keywords) ld.keywords = keywords
   if (cuisine) ld.recipeCuisine = cuisine
@@ -262,7 +263,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_ORIGIN,
-    logo: DEFAULT_OG_IMAGE,
+    logo: LOGO_IMAGE,
     description:
       'Dinner From Fridge helps you cook tonight from ingredients you already have — fridge scan, catalog recipes, nutrition, and week planning. No pork products.',
   }

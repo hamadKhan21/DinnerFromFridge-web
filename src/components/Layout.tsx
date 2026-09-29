@@ -7,6 +7,7 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`
 
 function SiteFooter() {
+  const { t } = useI18n()
   return (
     <footer className="border-t border-terracotta/10 px-5 py-6 text-center text-xs text-muted">
       <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
@@ -24,6 +25,24 @@ function SiteFooter() {
         </Link>
         <Link className="hover:text-terracotta" to="/cuisine/desi">
           Cuisines
+        </Link>
+        <Link className="hover:text-terracotta" to="/leftover-rescue">
+          {t('leftovers.title')}
+        </Link>
+        <Link className="hover:text-terracotta" to="/challenge">
+          {t('challenge.title')}
+        </Link>
+        <Link className="hover:text-terracotta" to="/ramadan">
+          {t('hub.name.ramadan')}
+        </Link>
+        <Link className="hover:text-terracotta" to="/eid">
+          {t('hub.name.eid')}
+        </Link>
+        <Link className="hover:text-terracotta" to="/desi">
+          {t('hub.name.desi')}
+        </Link>
+        <Link className="hover:text-terracotta" to="/arabic">
+          {t('hub.name.arabic')}
         </Link>
         <Link className="hover:text-terracotta" to="/legal/privacy">
           Privacy

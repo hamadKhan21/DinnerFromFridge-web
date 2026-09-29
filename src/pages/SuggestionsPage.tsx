@@ -5,10 +5,15 @@ import { ActiveDietBar } from '../components/ActiveDietBar'
 import { DietChips } from '../components/DietChips'
 import { FilterChips } from '../components/FilterChips'
 import { MealCard } from '../components/MealCard'
+import { keyIngredients, RecipeStoryShare } from '../components/RecipeStoryShare'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
 import { shareOrCopy, shareUrlForRecipes } from '../lib/sharePayload'
 import { usePageSeo } from '../lib/documentMeta'
+import { totalMinutes } from '../lib/servingScale'
+import { loadFridgeThumb } from '../lib/storyCard'
+import { useI18n } from '../i18n/I18nContext'
+import type { Recipe } from '../api/types'
 
 const NOTE: Record<string, string> = {
   cloudRecipes: 'Matched from the catalog (free).',
@@ -31,6 +36,8 @@ export function SuggestionsPage() {
   } = useApp()
   const navigate = useNavigate()
   const [shareMsg, setShareMsg] = useState<string | null>(null)
+  const [storyFor, setStoryFor] = useState<Recipe | null>(null)
+  const { t } = useI18n()
   usePageSeo({
     title: 'Tonight\'s dinner suggestions | Dinner From Fridge',
     description: 'Dinner ideas matched to your fridge ingredients — leftovers welcome.',
@@ -91,10 +98,50 @@ export function SuggestionsPage() {
               onClick={() => void onShare()}
               className="flex-1 rounded-2xl bg-terracotta py-3 font-bold text-white shadow"
             >
-              Share dinners
+              {t('share.shareDinners')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStoryFor(suggestions[0]!.recipe)}
+              className="flex-1 rounded-2xl border border-terracotta bg-white py-3 font-bold text-terracotta-dark"
+            >
+              📲 {t('share.shareStory')}
             </button>
             {shareMsg ? <span className="text-sm font-semibold text-have">{shareMsg}</span> : null}
           </div>
+        ) : null}
+        {storyFor ? (
+          <>
+            <RecipeStoryShare
+              open
+              onClose={() => setStoryFor(null)}
+              recipe={{
+                id: storyFor.id,
+                title: storyFor.title,
+                emoji: storyFor.emoji,
+                minutes: totalMinutes(storyFor),
+                ingredients: keyIngredients(storyFor.ingredients.map((i) => i.name)),
+              }}
+              photo={loadFridgeThumb()}
+              url={shareUrlForRecipes(suggestions.slice(0, 3).map((m) => m.recipe))}
+            />
+            {suggestions.length > 1 ? (
+              <div className="fixed inset-x-0 top-3 z-[90] mx-auto flex max-w-lg justify-center gap-2 px-4">
+                {suggestions.slice(0, 3).map((m) => (
+                  <button
+                    key={m.recipe.id}
+                    type="button"
+                    onClick={() => setStoryFor(m.recipe)}
+                    className={`max-w-[33%] truncate rounded-full px-3 py-1.5 text-xs font-bold shadow ${
+                      storyFor.id === m.recipe.id ? 'bg-terracotta text-white' : 'bg-white text-ink'
+                    }`}
+                  >
+                    {m.recipe.emoji} {m.recipe.title}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         {suggestionsNote ? (

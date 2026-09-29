@@ -24,6 +24,18 @@
 - https://dinnerfromfridge.com/cuisine/western
 - https://dinnerfromfridge.com/cuisine/mexican
 
+## Growth tools
+- https://dinnerfromfridge.com/sample-fridge — try a sample fridge: a pre-made scan result, no sign-up
+- https://dinnerfromfridge.com/leftover-rescue — leftover rescue / empty-fridge mode: dinners with only 2–4 main ingredients (salt, oil, spices assumed). Optional ?i=eggs,rice,bell+pepper
+- https://dinnerfromfridge.com/challenge — fridge challenge: pick 2–5 ingredients and share a link, e.g. https://dinnerfromfridge.com/challenge?i=eggs,spinach,rice
+- https://dinnerfromfridge.com/streak — home-cooked streak and estimated money saved (stored on the device)
+
+## Seasonal & cultural collections (halal-friendly, no pork)
+- https://dinnerfromfridge.com/ramadan — Ramadan: iftar from your fridge and quick suhoor ideas (English, with Arabic and Urdu summaries)
+- https://dinnerfromfridge.com/eid — Eid feast dishes and Eid leftover makeovers
+- https://dinnerfromfridge.com/desi — Desi (Pakistani / Indian / Bangladeshi) dinners: karahi, daal, biryani
+- https://dinnerfromfridge.com/arabic — Arabic dinners: kabsa, mandi, shawarma, shakshuka, hummus
+
 ## Recipes
 Individual recipes are at https://dinnerfromfridge.com/recipe/{id}
 Example: https://dinnerfromfridge.com/recipe/seed-chicken-caesar-wrap-dinner
@@ -36,7 +48,8 @@ Full catalog index: https://dinnerfromfridge.com/sitemap.xml
 - Week plan, favorites, and shopping list tools.
 - Dietary preference chips (e.g. vegetarian, vegan, gluten-free, dairy-free, halal, keto, high-protein).
 - Policy: the recipe catalog does not include pork products.
+- Share: recipe and result pages can be shared as 9:16 story images, WhatsApp links or plain links.
+- Languages: English, Arabic, Spanish, French, Turkish, Urdu (right-to-left for Arabic and Urdu).
 
 ## Contact / canonical
 - Canonical site: https://dinnerfromfridge.com
-- API (recipes): https://tonightfromthis.hamad2k9.workers.dev

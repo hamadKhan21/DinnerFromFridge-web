@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "prebuild": "node scripts/generate-sitemap.mjs",
-    "sitemap": "node scripts/generate-sitemap.mjs"
+    "sitemap": "node scripts/generate-sitemap.mjs",
+    "catalog": "node scripts/generate-catalog-index.mjs",
+    "og-images": "python3 scripts/generate-og-images.py"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.103.1",
