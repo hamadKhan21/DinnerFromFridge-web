@@ -92,36 +92,51 @@ function newCanvas(dir: Dir): { canvas: HTMLCanvasElement; ctx: CanvasRenderingC
   return { canvas, ctx }
 }
 
+/**
+ * Instagram / WhatsApp Stories cover roughly the top ~250px and bottom ~420px with UI
+ * and may crop the sides. Everything that matters stays inside this box;
+ * outside it there is only decorative background.
+ */
+export const SAFE = { top: 260, bottom: 1480, left: 90, right: 990 } as const
+const SAFE_W = SAFE.right - SAFE.left
+/** Content must end above the CTA block. */
+const CONTENT_BOTTOM = 1250
+
 function paintBackground(ctx: CanvasRenderingContext2D) {
   const g = ctx.createLinearGradient(0, 0, 0, STORY_H)
-  g.addColorStop(0, '#FFF3E6')
-  g.addColorStop(0.55, CREAM)
-  g.addColorStop(1, '#FFE3CC')
+  g.addColorStop(0, '#F6D3B8')
+  g.addColorStop(0.16, '#FFF3E6')
+  g.addColorStop(0.6, CREAM)
+  g.addColorStop(1, '#F6D3B8')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, STORY_W, STORY_H)
-  // soft decorative circles
-  ctx.fillStyle = 'rgba(196,92,38,0.07)'
+  // soft decorative circles (outside / at the edge of the safe zone only)
+  ctx.fillStyle = 'rgba(196,92,38,0.08)'
   ctx.beginPath()
-  ctx.arc(980, 180, 260, 0, Math.PI * 2)
+  ctx.arc(1000, 120, 240, 0, Math.PI * 2)
   ctx.fill()
   ctx.beginPath()
-  ctx.arc(80, 1500, 220, 0, Math.PI * 2)
+  ctx.arc(60, 1760, 260, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.beginPath()
+  ctx.arc(1040, 1860, 180, 0, Math.PI * 2)
   ctx.fill()
 }
 
 async function paintBrand(ctx: CanvasRenderingContext2D, dir: Dir) {
   const logo = await loadImage('/icon-192.png')
-  const size = 104
-  const y = 120
+  const size = 84
+  const y = SAFE.top + 10
   const brand = 'Dinner From Fridge'
-  ctx.font = `800 50px ${FONT}`
+  ctx.font = `800 44px ${FONT}`
   const tw = ctx.measureText(brand).width
-  const total = size + 26 + tw
+  const gap = 22
+  const total = size + gap + tw
   const x0 = (STORY_W - total) / 2
-  const logoX = dir === 'rtl' ? x0 + tw + 26 : x0
+  const logoX = dir === 'rtl' ? x0 + tw + gap : x0
   if (logo) {
     ctx.save()
-    roundRect(ctx, logoX, y, size, size, 26)
+    roundRect(ctx, logoX, y, size, size, 22)
     ctx.clip()
     ctx.drawImage(logo, logoX, y, size, size)
     ctx.restore()
@@ -129,32 +144,34 @@ async function paintBrand(ctx: CanvasRenderingContext2D, dir: Dir) {
   ctx.fillStyle = TERRA_DARK
   ctx.textAlign = 'left'
   ctx.direction = 'ltr'
-  ctx.fillText(brand, dir === 'rtl' ? x0 : x0 + size + 26, y + 70)
+  ctx.fillText(brand, dir === 'rtl' ? x0 : x0 + size + gap, y + 58)
   ctx.direction = dir
 }
 
+/** CTA line + big domain pill, fully inside the safe zone (ends at ~1470). */
 function paintCta(ctx: CanvasRenderingContext2D, cta: string) {
   ctx.textAlign = 'center'
   ctx.fillStyle = INK
-  const size = fitFont(ctx, cta, 700, 52, 34, 920)
+  const size = fitFont(ctx, cta, 700, 46, 30, SAFE_W - 20)
   ctx.font = `700 ${size}px ${FONT}`
-  ctx.fillText(cta, STORY_W / 2, 1596)
-  const pillW = 760
-  const pillH = 132
+  ctx.fillText(cta, STORY_W / 2, 1318)
+  const pillW = 820
+  const pillH = 116
   const px = (STORY_W - pillW) / 2
-  const py = 1640
+  const py = 1352
   ctx.save()
   ctx.shadowColor = 'rgba(154,63,18,0.35)'
-  ctx.shadowBlur = 30
-  ctx.shadowOffsetY = 10
+  ctx.shadowBlur = 24
+  ctx.shadowOffsetY = 8
   roundRect(ctx, px, py, pillW, pillH, pillH / 2)
   ctx.fillStyle = TERRA
   ctx.fill()
   ctx.restore()
   ctx.fillStyle = '#FFFFFF'
-  ctx.font = `800 58px ${FONT}`
   ctx.direction = 'ltr'
-  ctx.fillText(SITE_LABEL, STORY_W / 2, py + 86)
+  const ds = fitFont(ctx, SITE_LABEL, 800, 62, 40, pillW - 70)
+  ctx.font = `800 ${ds}px ${FONT}`
+  ctx.fillText(SITE_LABEL, STORY_W / 2, py + pillH / 2 + ds * 0.36)
 }
 
 function paintEmoji(ctx: CanvasRenderingContext2D, emoji: string, cx: number, cy: number, size: number) {
@@ -166,13 +183,17 @@ function paintEmoji(ctx: CanvasRenderingContext2D, emoji: string, cx: number, cy
   ctx.restore()
 }
 
-/** Chips laid out in rows, centered. Returns bottom y. */
+function chipMetrics(font: number) {
+  const h = font * 1.8
+  return { h, gap: 16, row: h + 16 }
+}
+
+/** Chips laid out in rows, centered inside the safe zone. Returns bottom y. */
 function paintChips(ctx: CanvasRenderingContext2D, items: string[], top: number, opts: { font: number; maxRows: number; fill?: string; color?: string }): number {
   ctx.font = `600 ${opts.font}px ${FONT}`
   const padX = opts.font * 0.7
-  const h = opts.font * 1.9
-  const gap = 18
-  const maxW = 920
+  const { h, gap } = chipMetrics(opts.font)
+  const maxW = SAFE_W - 20
   const rows: { text: string; w: number }[][] = [[]]
   let rowW = 0
   for (const raw of items) {
@@ -232,85 +253,94 @@ export async function renderRecipeStory(input: RecipeStoryInput): Promise<Blob> 
 
   ctx.textAlign = 'center'
   ctx.fillStyle = TERRA
-  const ks = fitFont(ctx, input.kicker, 700, 46, 32, 920)
+  const ks = fitFont(ctx, input.kicker, 700, 40, 28, SAFE_W)
   ctx.font = `700 ${ks}px ${FONT}`
-  ctx.fillText(input.kicker, STORY_W / 2, 320)
+  ctx.fillText(input.kicker, STORY_W / 2, 425)
 
   const photo = input.photo ? await loadImage(input.photo) : null
   let y: number
   if (photo) {
-    const bx = 110
-    const by = 350
-    const bw = 860
-    const bh = 460
+    const bw = 820
+    const bh = 360
+    const bx = (STORY_W - bw) / 2
+    const by = 455
     ctx.save()
     ctx.shadowColor = 'rgba(44,33,24,0.25)'
-    ctx.shadowBlur = 40
-    ctx.shadowOffsetY = 14
-    roundRect(ctx, bx, by, bw, bh, 56)
+    ctx.shadowBlur = 32
+    ctx.shadowOffsetY = 12
+    roundRect(ctx, bx, by, bw, bh, 48)
     ctx.fillStyle = '#fff'
     ctx.fill()
     ctx.restore()
     ctx.save()
-    roundRect(ctx, bx, by, bw, bh, 56)
+    roundRect(ctx, bx, by, bw, bh, 48)
     ctx.clip()
     drawCover(ctx, photo, bx, by, bw, bh)
     ctx.restore()
-    // emoji bubble overlapping the photo
+    // emoji bubble overlapping the photo's bottom edge
     ctx.save()
     ctx.shadowColor = 'rgba(44,33,24,0.25)'
-    ctx.shadowBlur = 24
+    ctx.shadowBlur = 20
     ctx.beginPath()
-    ctx.arc(STORY_W / 2, by + bh, 110, 0, Math.PI * 2)
+    ctx.arc(STORY_W / 2, by + bh, 80, 0, Math.PI * 2)
     ctx.fillStyle = '#FFFFFF'
     ctx.fill()
     ctx.restore()
-    paintEmoji(ctx, input.emoji, STORY_W / 2, by + bh, 130)
-    y = by + bh + 175
+    paintEmoji(ctx, input.emoji, STORY_W / 2, by + bh, 96)
+    y = by + bh + 80 + 88
   } else {
     ctx.beginPath()
-    ctx.arc(STORY_W / 2, 590, 230, 0, Math.PI * 2)
+    ctx.arc(STORY_W / 2, 620, 170, 0, Math.PI * 2)
     ctx.fillStyle = CHIP
     ctx.fill()
-    paintEmoji(ctx, input.emoji, STORY_W / 2, 590, 280)
-    y = 950
+    paintEmoji(ctx, input.emoji, STORY_W / 2, 620, 200)
+    y = 900
   }
 
-  // Title
+  // Title (max 2 lines, shrinks to fit)
   ctx.fillStyle = INK
   ctx.textAlign = 'center'
-  let size = 100
+  let size = 86
   let lines: string[] = []
-  for (; size >= 64; size -= 6) {
+  for (; size >= 56; size -= 6) {
     ctx.font = `800 ${size}px ${FONT}`
-    lines = wrapLines(ctx, input.title, 920, 2)
+    lines = wrapLines(ctx, input.title, SAFE_W - 20, 2)
     if (!lines.some((l) => l.endsWith('…'))) break
   }
   ctx.font = `800 ${size}px ${FONT}`
   for (const l of lines) {
     ctx.fillText(l, STORY_W / 2, y)
-    y += size * 1.1
+    y += size * 1.08
   }
 
   // time pill
   const timeText = `⏱ ${input.minutesLabel}`
-  ctx.font = `700 46px ${FONT}`
-  const tw = ctx.measureText(timeText).width + 70
-  roundRect(ctx, (STORY_W - tw) / 2, y - 16, tw, 84, 42)
+  ctx.font = `700 40px ${FONT}`
+  const tw = ctx.measureText(timeText).width + 64
+  const pillTop = y - 22
+  roundRect(ctx, (STORY_W - tw) / 2, pillTop, tw, 72, 36)
   ctx.fillStyle = TERRA
   ctx.fill()
   ctx.fillStyle = '#fff'
-  ctx.fillText(timeText, STORY_W / 2, y + 42)
-  y += 125
+  ctx.fillText(timeText, STORY_W / 2, pillTop + 50)
+  y = pillTop + 72 + 44
 
-  // keep everything above the CTA block (which starts ~1540)
-  const chipRow = 40 * 1.9 + 18
-  const maxRows = Math.min(3, Math.floor((1530 - (y + 30)) / chipRow))
-  if (input.ingredients.length && maxRows >= 1) {
-    ctx.fillStyle = MUTED
-    ctx.font = `700 38px ${FONT}`
-    ctx.fillText(input.ingredientsLabel, STORY_W / 2, y)
-    paintChips(ctx, input.ingredients.slice(0, 8), y + 30, { font: 40, maxRows })
+  // ingredients: chips if they fit above CONTENT_BOTTOM, else one muted line
+  if (input.ingredients.length) {
+    const { row } = chipMetrics(36)
+    const labelH = 44
+    const rowsFit = Math.floor((CONTENT_BOTTOM - (y + labelH)) / row)
+    if (rowsFit >= 1) {
+      ctx.fillStyle = MUTED
+      ctx.font = `700 32px ${FONT}`
+      ctx.fillText(input.ingredientsLabel, STORY_W / 2, y + 10)
+      paintChips(ctx, input.ingredients.slice(0, 8), y + labelH, { font: 36, maxRows: Math.min(2, rowsFit) })
+    } else if (y + 10 < CONTENT_BOTTOM) {
+      ctx.fillStyle = MUTED
+      ctx.font = `600 36px ${FONT}`
+      const [line] = wrapLines(ctx, input.ingredients.join(' · '), SAFE_W - 20, 1)
+      ctx.fillText(line ?? '', STORY_W / 2, y + 20)
+    }
   }
 
   paintCta(ctx, input.cta)
@@ -331,24 +361,31 @@ export async function renderChallengeStory(input: ChallengeStoryInput): Promise<
   paintBackground(ctx)
   await paintBrand(ctx, dir)
 
-  paintEmoji(ctx, '🧑‍🍳', STORY_W / 2, 480, 220)
+  paintEmoji(ctx, '🧑‍🍳', STORY_W / 2, 480, 150)
   ctx.fillStyle = INK
   ctx.textAlign = 'center'
-  ctx.font = `800 84px ${FONT}`
-  let y = 720
-  for (const l of wrapLines(ctx, input.headline, 920, 3)) {
-    ctx.fillText(l, STORY_W / 2, y)
-    y += 96
+  let hs = 74
+  let lines: string[] = []
+  for (; hs >= 54; hs -= 4) {
+    ctx.font = `800 ${hs}px ${FONT}`
+    lines = wrapLines(ctx, input.headline, SAFE_W - 20, 3)
+    if (!lines.some((l) => l.endsWith('…'))) break
   }
-  y += 20
-  y = paintChips(ctx, input.items, y, { font: 60, maxRows: 4, fill: TERRA, color: '#FFFFFF' })
+  ctx.font = `800 ${hs}px ${FONT}`
+  let y = 640
+  for (const l of lines) {
+    ctx.fillText(l, STORY_W / 2, y)
+    y += hs * 1.14
+  }
+  y += 6
+  const subH = 60
+  const chipFont = input.items.length > 3 ? 44 : 50
+  const rows = Math.max(1, Math.min(3, Math.floor((CONTENT_BOTTOM - subH - y) / chipMetrics(chipFont).row)))
+  y = paintChips(ctx, input.items, y, { font: chipFont, maxRows: rows, fill: TERRA, color: '#FFFFFF' })
   ctx.fillStyle = MUTED
-  ctx.font = `600 44px ${FONT}`
-  y += 40
-  for (const l of wrapLines(ctx, input.sub, 900, 2)) {
-    ctx.fillText(l, STORY_W / 2, y)
-    y += 58
-  }
+  ctx.font = `600 38px ${FONT}`
+  const [sub] = wrapLines(ctx, input.sub, SAFE_W - 20, 1)
+  ctx.fillText(sub ?? '', STORY_W / 2, Math.min(y + 40, CONTENT_BOTTOM))
   paintCta(ctx, input.cta)
   return toBlob(canvas)
 }
@@ -368,52 +405,50 @@ export async function renderBadgeStory(input: BadgeStoryInput): Promise<Blob> {
   paintBackground(ctx)
   await paintBrand(ctx, dir)
 
-  // medal
   const cx = STORY_W / 2
-  const cy = 640
-  const g = ctx.createRadialGradient(cx, cy - 80, 40, cx, cy, 330)
+  const cy = 660
+  const R = 230
+  const g = ctx.createRadialGradient(cx, cy - 60, 30, cx, cy, R + 20)
   g.addColorStop(0, '#F08A4B')
   g.addColorStop(1, TERRA_DARK)
   ctx.save()
   ctx.shadowColor = 'rgba(154,63,18,0.4)'
-  ctx.shadowBlur = 50
-  ctx.shadowOffsetY = 18
+  ctx.shadowBlur = 40
+  ctx.shadowOffsetY = 14
   ctx.beginPath()
-  ctx.arc(cx, cy, 310, 0, Math.PI * 2)
+  ctx.arc(cx, cy, R, 0, Math.PI * 2)
   ctx.fillStyle = g
   ctx.fill()
   ctx.restore()
   ctx.beginPath()
-  ctx.arc(cx, cy, 270, 0, Math.PI * 2)
+  ctx.arc(cx, cy, R - 30, 0, Math.PI * 2)
   ctx.strokeStyle = 'rgba(255,255,255,0.5)'
-  ctx.lineWidth = 8
+  ctx.lineWidth = 6
   ctx.stroke()
-  paintEmoji(ctx, '🔥', cx, cy - 190, 90)
+  paintEmoji(ctx, '🔥', cx, cy - 135, 70)
   ctx.fillStyle = '#FFFFFF'
   ctx.textAlign = 'center'
   ctx.direction = 'ltr'
-  const ns = fitFont(ctx, input.bigNumber, 900, 200, 110, 440)
+  const ns = fitFont(ctx, input.bigNumber, 900, 160, 90, 320)
   ctx.font = `900 ${ns}px ${FONT}`
-  ctx.fillText(input.bigNumber, cx, cy + 80)
+  ctx.fillText(input.bigNumber, cx, cy + 55)
   ctx.direction = dir
-  const ls = fitFont(ctx, input.bigLabel, 700, 50, 30, 440)
+  const ls = fitFont(ctx, input.bigLabel, 700, 40, 26, 320)
   ctx.font = `700 ${ls}px ${FONT}`
-  ctx.fillText(input.bigLabel, cx, cy + 160)
+  ctx.fillText(input.bigLabel, cx, cy + 125)
 
-  let y = 1080
+  let y = cy + R + 110
   ctx.fillStyle = INK
   for (const l of input.lines) {
-    const s = fitFont(ctx, l, 800, 64, 40, 940)
-    ctx.font = `800 ${s}px ${FONT}`
+    const s2 = fitFont(ctx, l, 800, 58, 36, SAFE_W - 20)
+    ctx.font = `800 ${s2}px ${FONT}`
     ctx.fillText(l, cx, y)
-    y += 96
+    y += 80
   }
   ctx.fillStyle = MUTED
-  ctx.font = `500 34px ${FONT}`
-  for (const l of wrapLines(ctx, input.footnote, 900, 2)) {
-    ctx.fillText(l, cx, y + 10)
-    y += 46
-  }
+  ctx.font = `500 32px ${FONT}`
+  const [foot] = wrapLines(ctx, input.footnote, SAFE_W - 20, 1)
+  ctx.fillText(foot ?? '', cx, Math.min(y, CONTENT_BOTTOM))
   paintCta(ctx, input.cta)
   return toBlob(canvas)
 }
