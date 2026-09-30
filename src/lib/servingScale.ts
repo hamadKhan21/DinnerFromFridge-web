@@ -107,6 +107,17 @@ export function scaleNutrition(
   return { ...scaled, perServing: false }
 }
 
+/** Nutrition for exactly one serving — what "Log this meal" records. */
+export function onePortion(
+  nutrition: NutritionInfo | null | undefined,
+  servings: number,
+): NutritionInfo | null | undefined {
+  if (!nutrition) return nutrition
+  if (nutrition.perServing !== false) return { ...nutrition, perServing: true }
+  const count = servings > 0 ? servings : 1
+  return { ...multiplyNutrition(nutrition, 1 / count), perServing: true }
+}
+
 export function scaleRecipe(recipe: Recipe, selectedServings: number): Recipe {
   const base = recipe.servings <= 0 ? 1 : recipe.servings
   const selected = Math.max(1, Math.min(8, selectedServings))

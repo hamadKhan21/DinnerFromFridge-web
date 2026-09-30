@@ -6,7 +6,7 @@ import type { Ingredient, Recipe } from '../api/types'
 import { NutritionStrip } from '../components/NutritionStrip'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
-import { difficultyLabel, ingredientDisplayLabel, scaleRecipe, totalMinutes } from '../lib/servingScale'
+import { difficultyLabel, ingredientDisplayLabel, onePortion, scaleRecipe, totalMinutes } from '../lib/servingScale'
 import {
   applyPageSeo,
   buildRecipeJsonLd,
@@ -269,6 +269,10 @@ export function RecipeDetailPage() {
     return () => clearJsonLd('recipe')
   }, [recipe])
 
+  const perServing = useMemo(
+    () => (recipe ? onePortion(recipe.nutrition, recipe.servings) ?? null : null),
+    [recipe],
+  )
   const scaled = useMemo(() => (recipe ? scaleRecipe({ ...recipe, servings: baseServings }, servings) : null), [
     recipe,
     servings,
@@ -364,25 +368,31 @@ export function RecipeDetailPage() {
           </button>
         </div>
 
-        <NutritionStrip nutrition={scaled.nutrition} label="Nutrition (scaled)" />
+        <NutritionStrip nutrition={perServing} label="Per serving" />
+        {perServing && servings > 1 && scaled.nutrition && scaled.nutrition.calories > 0 ? (
+          <p className="mt-1 text-xs text-muted">
+            All {servings} servings: {Math.round(perServing.calories * servings)} cal
+          </p>
+        ) : null}
 
-        {scaled.nutrition &&
-        (scaled.nutrition.calories > 0 ||
-          scaled.nutrition.protein > 0 ||
-          scaled.nutrition.carbs > 0 ||
-          scaled.nutrition.fat > 0) ? (
+        {perServing &&
+        (perServing.calories > 0 ||
+          perServing.protein > 0 ||
+          perServing.carbs > 0 ||
+          perServing.fat > 0) ? (
           <div className="mt-3">
             <button
               type="button"
               onClick={() => {
-                const n = scaled.nutrition!
+                // Log one serving (what one person eats), not the whole pot.
+                const n = perServing!
                 addCalorieEntry({
                   name: scaled.title,
                   calories: n.calories,
                   protein: n.protein,
                   carbs: n.carbs,
                   fat: n.fat,
-                  amountLabel: `${servings} serving${servings === 1 ? '' : 's'}`,
+                  amountLabel: '1 serving',
                   source: 'recipe',
                   recipeId: recipe.id,
                 })

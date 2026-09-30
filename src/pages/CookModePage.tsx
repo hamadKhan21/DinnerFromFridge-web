@@ -4,7 +4,7 @@ import { api } from '../api/client'
 import type { Recipe } from '../api/types'
 import { PageHeader } from '../components/PageHeader'
 import { useApp } from '../context/AppContext'
-import { ingredientDisplayLabel } from '../lib/servingScale'
+import { ingredientDisplayLabel, onePortion } from '../lib/servingScale'
 import { applyPageSeo } from '../lib/documentMeta'
 import { recordCooked } from '../lib/streaks'
 
@@ -122,15 +122,15 @@ export function CookModePage() {
             <button
               type="button"
               onClick={() => {
-                const n = recipe.nutrition!
-                const servings = recipe.servings || 1
+                // Log one serving (what one person eats), not the whole pot.
+                const n = onePortion(recipe.nutrition, recipe.servings || 1)!
                 addCalorieEntry({
                   name: recipe.title,
                   calories: n.calories,
                   protein: n.protein,
                   carbs: n.carbs,
                   fat: n.fat,
-                  amountLabel: `${servings} serving${servings === 1 ? '' : 's'}`,
+                  amountLabel: '1 serving',
                   source: 'recipe',
                   recipeId: recipe.id,
                 })
